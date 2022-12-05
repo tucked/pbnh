@@ -1,14 +1,3 @@
-# Copy this file to secrets.yml and edit the options
-server:
-  bind_ip   : "0.0.0.0"
-  bind_port : 5001
-  debug     : True
-
-database:
-  dbname    : "database_name"
-  dialect   : "postgresql or sqlite"
-  driver    : null
-  host      : "pbnh_db.local"
-  password  : "hunter2"
-  port      : 5432
-  username  : "pbnh_username"
+SQLALCHEMY_DATABASE_URI: "dialect+driver://username:password@host:port/database"
+DEBUG: False
+TESTING: False

@@ -7,28 +7,16 @@ from pbnh.db import CreateDB
 from io import BytesIO
 
 
-DEFAULTS = {
-    "server": {
-        "bind_ip": "127.0.0.1",
-        "bind_port": 8080,
-        "debug": True,
-    },
-    "database": {
-        "dbname": "pastedb",
-        "dialect": "sqlite",
-        "driver": None,
-        "host": None,
-        "password": None,
-        "port": None,
-        "username": None,
-    },
-}
-
-
 class TestPost(unittest.TestCase):
     def setUp(self):
-        self.app = create_app({"CONFIG": DEFAULTS})
-        self.newdb = CreateDB(**self.app.config["CONFIG"]["database"])
+        self.app = create_app(
+            {
+                "DEBUG": True,
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": "sqlite:///test_db.sqlite",
+            }
+        )
+        self.newdb = CreateDB(self.app.config["SQLALCHEMY_DATABASE_URI"])
         self.newdb.create()
         self.test_client = self.app.test_client()
 
@@ -72,7 +60,7 @@ class TestPost(unittest.TestCase):
         self.assertEqual(j.get("hashid"), "738ddf35b3a85a7a6ba7b232bd3d5f1e4d284ad1")
 
     def test_follow_redirect(self):
-        url = DEFAULTS["server"]["bind_ip"] + ":" + str(DEFAULTS["server"]["bind_port"])
+        url = "localhost:12345"
         hashid = hashlib.sha1(url.encode("utf-8"), usedforsecurity=False).hexdigest()
         response = self.test_client.post("/", data={"r": url})
         j = json.loads(response.data.decode("utf-8"))

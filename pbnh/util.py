@@ -9,12 +9,7 @@ from pbnh.db import Paster
 from datetime import datetime, timezone, timedelta
 
 
-def getConfig():
-    return current_app.config["CONFIG"].get("database")
-
-
 def fileData(files, addr=None, sunset=None, mimestr=None):
-    config = getConfig()
     try:
         buf = files.stream
         if (
@@ -25,15 +20,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
         ):
             data = buf.read()
             mime = getMime(data=data, mimestr=mimestr)
-            with Paster(
-                dialect=config.get("dialect"),
-                dbname=config.get("dbname"),
-                driver=config.get("driver"),
-                host=config.get("host"),
-                password=config.get("password"),
-                port=config.get("port"),
-                username=config.get("username"),
-            ) as pstr:
+            with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
                 j = pstr.create(data, mime=mime, ip=addr, sunset=sunset)
                 return j
     except IOError as e:
@@ -42,16 +29,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
 
 
 def stringData(inputstr, addr=None, sunset=None, mime=None):
-    config = getConfig()
-    with Paster(
-        dialect=config.get("dialect"),
-        dbname=config.get("dbname"),
-        driver=config.get("driver"),
-        host=config.get("host"),
-        password=config.get("password"),
-        port=config.get("port"),
-        username=config.get("username"),
-    ) as pstr:
+    with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
         j = pstr.create(inputstr.encode("utf-8"), mime=mime, ip=addr, sunset=sunset)
         return j
     return "String save error"
@@ -76,16 +54,7 @@ def getMime(data=None, mimestr=None):
 
 
 def getPaste(paste_id):
-    config = getConfig()
-    with Paster(
-        dialect=config.get("dialect"),
-        dbname=config.get("dbname"),
-        driver=config.get("driver"),
-        host=config.get("host"),
-        password=config.get("password"),
-        port=str(config.get("port")),
-        username=config.get("username"),
-    ) as pstr:
+    with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
         try:
             return pstr.query(hashid=paste_id)
         except ValueError:

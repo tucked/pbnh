@@ -38,80 +38,13 @@ class Paste(Base):
     __table_args__ = (UniqueConstraint("hashid", name="unique_hash"),)
 
 
-class DBConnect:
-    """create db connection string"""
-
-    def __init__(
-        self,
-        dialect=None,
-        driver=None,
-        username=None,
-        password=None,
-        host=None,
-        port=None,
-        dbname=None,
-    ):
-        self._connect = dialect
-        if driver:
-            self._connect += "+" + driver
-        self._connect += "://"
-        if username:
-            self._connect += username
-            if password:
-                self._connect += ":" + password
-        if host:
-            self._connect += "@"
-            self._connect += host
-            if port:
-                self._connect += ":" + str(port)
-        elif dialect == "postgresql" and username:
-            self._connect += "@localhost"
-        if dbname:
-            self._connect += "/" + dbname
-
-    def __repr__(self):
-        return self._connect
-
-    @property
-    def connect(self):
-        """Connection string read-only property"""
-        return self._connect
-
-
 class Paster:
-    def __init__(
-        self,
-        dialect="sqlite",
-        driver=None,
-        username=None,
-        password=None,
-        host=None,
-        port=None,
-        dbname="pastedb",
-    ):
+    def __init__(self, url):
         """Grab connection information to pass to DBConnect"""
-        self.dialect = dialect
-        self.dbname = dbname
-        self.driver = driver
-        self.username = username
-        self.password = password
-        self.host = host
-        self.port = port
+        self._url = url
 
     def __enter__(self):
-        connection = DBConnect(
-            dialect=self.dialect,
-            driver=self.driver,
-            username=self.username,
-            password=self.password,
-            host=self.host,
-            port=self.port,
-            dbname=self.dbname,
-        ).connect
-        if self.dialect == "postgresql":
-            self.engine = create_engine(connection, pool_size=1)
-        else:
-            self.engine = create_engine(connection)
+        self.engine = create_engine(self._url)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
         return self
@@ -192,12 +125,12 @@ class Paster:
 
 
 class CreateDB:
-    def __init__(self, *args, **kwargs):
-        self._dbconnect = DBConnect(*args, **kwargs)
+    def __init__(self, url):
+        self._url = url
         self.engine = create_engine(str(self))
 
     def __str__(self):
-        return str(self._dbconnect)
+        return str(self._url)
 
     def create(self):
         Base.metadata.create_all(self.engine)
@@ -207,51 +140,15 @@ class CreateDB:
 
 
 def main():
-    config = current_app.config["CONFIG"].get("database")
     parser = argparse.ArgumentParser(description="Initialize a paste db")
     parser.add_argument(
-        "-t", "--type", default=config.get("dialect"), help="sqlite or postgresql"
-    )
-    parser.add_argument(
-        "-n",
-        "--dbname",
-        default=config.get("dbname"),
-        help="name of the database to be created",
-    )
-    parser.add_argument(
-        "-d",
-        "--driver",
-        default=config.get("driver"),
-        help="database driver for sqlalchemy to use",
-    )
-    parser.add_argument(
-        "-u",
-        "--username",
-        default=config.get("username"),
-        help="username to use for the database connection",
-    )
-    parser.add_argument(
-        "-p",
-        "--password",
-        default=config.get("password"),
-        help="password to use for the database connection",
-    )
-    parser.add_argument(
-        "-s", "--server", default=config.get("host"), help="host of the database"
-    )
-    parser.add_argument(
-        "-P", "--port", default=config.get("port"), help="port the database listens on"
+        "url",
+        default=current_app.config.get("SQLALCHEMY_DATABASE_URI"),
+        help="the database url"
+        " (e.g. dialect+driver://username:password@host:port/database)",
     )
     args = parser.parse_args()
-    newdb = CreateDB(
-        dialect=args.type,
-        driver=args.driver,
-        username=args.username,
-        password=args.password,
-        host=args.server,
-        port=args.port,
-        dbname=args.dbname,
-    )
+    newdb = CreateDB(args.url)
     print(newdb.create())
 
 
