@@ -20,42 +20,42 @@ CONFIG = {}
 try:
     # This is basically the dev config file, this is the path
     # that docker-compose is using for secrets
-    with open(expanduser('~/.config/.pbnh.yml')) as f:
+    with open(expanduser("~/.config/.pbnh.yml")) as f:
         CONFIG = yaml.load(f)
 except OSError:
     try:
         # This is basically the prod config file, this is the path that a
         # docker container will pull its config from if secrets are
         # configured right.
-        with open('/run/secrets/secrets.yml') as f:
+        with open("/run/secrets/secrets.yml") as f:
             CONFIG = yaml.load(f)
     except OSError:
         try:
             # As a final fallback, try checking the local dir
-            with open('secrets.yml') as f:
+            with open("secrets.yml") as f:
                 CONFIG = yaml.load(f)
         except OSError:
             # should probalt log instead of print. Whatever
-            print('no configuration files found')
+            print("no configuration files found")
 
-app.config['CONFIG'] = CONFIG
+app.config["CONFIG"] = CONFIG
 
 
 @app.route("/", methods=["GET"])
 def hello():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
 @app.route("/about.md", methods=["GET"])
 def about():
-    with open(join(SITE_ROOT, 'static', 'about.md'), 'r') as aboutfile:
+    with open(join(SITE_ROOT, "static", "about.md"), "r") as aboutfile:
         data = aboutfile.read()
-    return render_template('markdown.html', paste=data)
+    return render_template("markdown.html", paste=data)
 
 
 @app.route("/static/<path:path>")
 def send_static(path):
-    return send_from_directory('static', path)
+    return send_from_directory("static", path)
 
 
 @app.route("/", methods=["POST"])
@@ -64,30 +64,28 @@ def post_paste():
         addr = request.headers.getlist("X-Forwarded-For")[0]
     else:
         addr = request.remote_addr
-    sunsetstr = request.form.get('sunset')
-    mimestr = request.form.get('mime')
+    sunsetstr = request.form.get("sunset")
+    mimestr = request.form.get("mime")
     sunset = util.getSunsetFromStr(sunsetstr)
-    redirectstr = request.form.get('r') or request.form.get('redirect')
+    redirectstr = request.form.get("r") or request.form.get("redirect")
     if redirectstr:
-        j = util.stringData(redirectstr, addr=addr, sunset=sunset,
-                            mime='redirect')
+        j = util.stringData(redirectstr, addr=addr, sunset=sunset, mime="redirect")
         if j:
             if isinstance(j, str):
                 return j
-            j['link'] = request.url + str(j.get('hashid'))
+            j["link"] = request.url + str(j.get("hashid"))
         return json.dumps(j), 201
-    inputstr = request.form.get('content') or request.form.get('c')
+    inputstr = request.form.get("content") or request.form.get("c")
     # we got string data
     if inputstr and isinstance(inputstr, str):
         try:
-            j = util.stringData(inputstr, addr=addr, sunset=sunset,
-                                mime=mimestr)
+            j = util.stringData(inputstr, addr=addr, sunset=sunset, mime=mimestr)
             if j:
-                j['link'] = request.url + str(j.get('hashid'))
+                j["link"] = request.url + str(j.get("hashid"))
             return json.dumps(j), 201
         except (exc.OperationalError, exc.InternalError):
             abort(500)
-    files = request.files.get('content') or request.files.get('c')
+    files = request.files.get("content") or request.files.get("c")
     # we got file data
     if files and isinstance(files, FileStorage):
         try:
@@ -95,7 +93,7 @@ def post_paste():
             if j:
                 if isinstance(j, str):
                     return j
-                j['link'] = request.url + str(j.get('hashid'))
+                j["link"] = request.url + str(j.get("hashid"))
             return json.dumps(j), 201
         except (exc.OperationalError, exc.InternalError):
             abort(500)
@@ -112,15 +110,14 @@ def view_paste(paste_id):
     query = util.getPaste(paste_id)
     if not query:
         abort(404)
-    mime = query.get('mime')
-    data = query.get('data')
-    if mime == 'redirect':
-        return redirect(data.decode('utf-8'), code=302)
-    if mime.startswith('text/'):
-        return render_template('paste.html', paste=data.decode('utf-8'),
-                               mime=mime)
+    mime = query.get("mime")
+    data = query.get("data")
+    if mime == "redirect":
+        return redirect(data.decode("utf-8"), code=302)
+    if mime.startswith("text/"):
+        return render_template("paste.html", paste=data.decode("utf-8"), mime=mime)
     else:
-        data = io.BytesIO(query.get('data'))
+        data = io.BytesIO(query.get("data"))
         return send_file(data, mimetype=mime)
 
 
@@ -129,13 +126,13 @@ def view_paste_with_extension(paste_id, filetype):
     query = util.getPaste(paste_id)
     if not query:
         abort(404)
-    if filetype == 'md':
-        data = query.get('data').decode('utf-8')
-        return render_template('markdown.html', paste=data)
-    if filetype == 'rst':
-        data = query.get('data').decode('utf-8')
-        return Response(publish_parts(data, writer_name='html')['html_body'])
-    if filetype == 'asciinema':
+    if filetype == "md":
+        data = query.get("data").decode("utf-8")
+        return render_template("markdown.html", paste=data)
+    if filetype == "rst":
+        data = query.get("data").decode("utf-8")
+        return Response(publish_parts(data, writer_name="html")["html_body"])
+    if filetype == "asciinema":
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
         params = {}
@@ -145,11 +142,11 @@ def view_paste_with_extension(paste_id, filetype):
             except json.JSONDecodeError:
                 params[key] = str(value)
         return render_template(
-            'asciinema.html',
+            "asciinema.html",
             pasteid=paste_id,
             params=params,
         )
-    data = io.BytesIO(query.get('data'))
+    data = io.BytesIO(query.get("data"))
     mime = util.getMime(mimestr=filetype)
     return Response(data, mimetype=mime)
 
@@ -157,14 +154,13 @@ def view_paste_with_extension(paste_id, filetype):
 @app.route("/<string:paste_id>/<string:filetype>")
 def view_paste_with_highlighting(paste_id, filetype):
     if not filetype:
-        filetype = 'txt'
+        filetype = "txt"
     query = util.getPaste(paste_id)
     if not query:
         abort(404)
-    data = query.get('data')
+    data = query.get("data")
     try:
-        return render_template('paste.html', paste=data.decode('utf-8'),
-                               mime=filetype)
+        return render_template("paste.html", paste=data.decode("utf-8"), mime=filetype)
     except UnicodeDecodeError:
         return abort(500)
 
@@ -172,4 +168,4 @@ def view_paste_with_highlighting(paste_id, filetype):
 @app.route("/error")
 @app.errorhandler(404)
 def fourohfour(e=None):
-    return render_template('404.html'), 404
+    return render_template("404.html"), 404

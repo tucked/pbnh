@@ -13,6 +13,7 @@ pyyaml = {version = ">=6.0"}
 sqlalchemy = {version = "~=1.4"}
 
 [dev-packages]
+black = {version = ">=22.10"}
 
 [requires]
 python_version = "3.11"

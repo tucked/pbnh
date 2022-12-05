@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
+
 class Paste(Base):
     """Class to define the paste table
 
@@ -17,14 +18,15 @@ class Paste(Base):
     sunset       datetime
     data         blob
     """
-    __tablename__ = 'paste'
+
+    __tablename__ = "paste"
 
     id = Column(Integer, primary_key=True)
     hashid = Column(String, nullable=False)
     ip = Column(String)
     timestamp = Column(DateTime, default=func.now())
-    mime = Column(String, default='text/plain')
+    mime = Column(String, default="text/plain")
     sunset = Column(DateTime)
     data = Column(LargeBinary)
 
-    __table_args__ = (UniqueConstraint('hashid', name='unique_hash'),)
+    __table_args__ = (UniqueConstraint("hashid", name="unique_hash"),)
