@@ -3,7 +3,6 @@ import unittest
 from datetime import datetime
 
 from pbnh.db.createdb import CreateDB
-from pbnh.db.connect import DBConnect
 from pbnh.db import paste
 
 dialect = "postgresql"

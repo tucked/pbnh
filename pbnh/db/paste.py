@@ -1,4 +1,3 @@
-import codecs
 import hashlib
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError, DataError

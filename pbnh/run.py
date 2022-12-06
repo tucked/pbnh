@@ -1,1 +1,1 @@
-from pbnh.app import app
+from pbnh.app import app  # noqa: F401

@@ -3,6 +3,7 @@ import magic
 import mimetypes
 import tempfile
 
+from pbnh import conf
 from pbnh.db import paste
 from pbnh.app import app
 from datetime import datetime, timezone, timedelta
