@@ -50,7 +50,12 @@ class Paster:
         self.engine.dispose()
 
     def create(self, data, ip=None, mime=None, sunset=None, timestamp=None):
-        sha1 = hashlib.sha1(data).hexdigest()
+        sha1 = hashlib.sha1(
+            data,
+            # If a user has the hash, we will give them the content,
+            # so we do not care about the irreversibility of SHA1:
+            usedforsecurity=False,
+        ).hexdigest()
         collision = self.query(hashid=sha1)
         if collision:
             pasteid = collision.get("id")

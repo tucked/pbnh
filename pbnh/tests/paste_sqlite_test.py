@@ -6,7 +6,7 @@ from pbnh.db.createdb import CreateDB
 from pbnh.db import paste
 
 dialect = "sqlite"
-dbname = "/tmp/pbnh_test.db"
+dbname = "/tmp/pbnh_test.db"  # nosec B108
 
 
 class TestPaster(unittest.TestCase):

@@ -82,7 +82,7 @@ class TestPost(unittest.TestCase):
 
     def test_follow_redirect(self):
         url = DEFAULTS["server"]["bind_ip"] + ":" + str(DEFAULTS["server"]["bind_port"])
-        hashid = hashlib.sha1(url.encode("utf-8")).hexdigest()
+        hashid = hashlib.sha1(url.encode("utf-8"), usedforsecurity=False).hexdigest()
         response = self.app.post("/", data={"r": url})
         j = json.loads(response.data.decode("utf-8"))
         self.failUnlessEqual(j.get("hashid"), hashid)

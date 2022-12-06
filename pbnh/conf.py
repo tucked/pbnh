@@ -3,7 +3,7 @@ import copy
 
 DEFAULTS = {
     "server": {
-        "bind_ip": "0.0.0.0",
+        "bind_ip": "127.0.0.1",
         "bind_port": 5001,
         "debug": True,
     },
@@ -22,6 +22,6 @@ DEFAULTS = {
 def get_config():
     try:
         with open("secrets.yml") as config:
-            return yaml.load(config)
+            return yaml.safe_load(config)
     except IOError:
         return copy.copy(DEFAULTS)

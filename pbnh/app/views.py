@@ -20,19 +20,19 @@ try:
     # This is basically the dev config file, this is the path
     # that docker-compose is using for secrets
     with open(expanduser("~/.config/.pbnh.yml")) as f:
-        CONFIG = yaml.load(f)
+        CONFIG = yaml.safe_load(f)
 except OSError:
     try:
         # This is basically the prod config file, this is the path that a
         # docker container will pull its config from if secrets are
         # configured right.
         with open("/run/secrets/secrets.yml") as f:
-            CONFIG = yaml.load(f)
+            CONFIG = yaml.safe_load(f)
     except OSError:
         try:
             # As a final fallback, try checking the local dir
             with open("secrets.yml") as f:
-                CONFIG = yaml.load(f)
+                CONFIG = yaml.safe_load(f)
         except OSError:
             # should probalt log instead of print. Whatever
             print("no configuration files found")
