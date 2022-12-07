@@ -1,43 +1,20 @@
 import io
 import json
-import yaml
+from os.path import dirname, join, realpath
 
 from docutils.core import publish_parts
 from flask import abort, redirect, render_template, Response, request
 from flask import send_file, send_from_directory
-from os.path import realpath, dirname, join, expanduser
 from sqlalchemy import exc
 from werkzeug.datastructures import FileStorage
 
+from pbnh import get_config
 from pbnh.app import app
 from pbnh.app import util
 
+
 SITE_ROOT = realpath(dirname(__file__))
-
-
-CONFIG = {}
-try:
-    # This is basically the dev config file, this is the path
-    # that docker-compose is using for secrets
-    with open(expanduser("~/.config/.pbnh.yml")) as f:
-        CONFIG = yaml.safe_load(f)
-except OSError:
-    try:
-        # This is basically the prod config file, this is the path that a
-        # docker container will pull its config from if secrets are
-        # configured right.
-        with open("/run/secrets/secrets.yml") as f:
-            CONFIG = yaml.safe_load(f)
-    except OSError:
-        try:
-            # As a final fallback, try checking the local dir
-            with open("secrets.yml") as f:
-                CONFIG = yaml.safe_load(f)
-        except OSError:
-            # should probalt log instead of print. Whatever
-            print("no configuration files found")
-
-app.config["CONFIG"] = CONFIG
+app.config["CONFIG"] = get_config()
 
 
 @app.route("/", methods=["GET"])

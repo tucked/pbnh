@@ -3,7 +3,7 @@ import magic
 import mimetypes
 import tempfile
 
-from pbnh import conf
+from pbnh import get_config
 from pbnh.db import paste
 from pbnh.app import app
 from datetime import datetime, timezone, timedelta
@@ -13,7 +13,7 @@ def getConfig():
     if app.config.get("CONFIG"):
         return app.config.get("CONFIG").get("database")
     else:
-        return conf.get_config().get("database")
+        return get_config().get("database")
 
 
 def fileData(files, addr=None, sunset=None, mimestr=None):
