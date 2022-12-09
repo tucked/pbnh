@@ -1,63 +1,92 @@
-pbnh
-========
-[pbnh](https://github.com/bhanderson/pbnh) is our implementation of a pastebin server using flask and postgres or sqlite
+# About
 
-It is highly derived from [silverp1's](https://github.com/silverp1) and [buhman's](https://github.com/buhman) project [pb](https://github.com/ptpb/pb) and they deserve the recognition for this idea.
+[pbnh](https://github.com/bhanderson/pbnh) is a [content-addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [pastebin](https://en.wikipedia.org/wiki/Pastebin).
+It supports [anonymous text/file upload](#paste-creation) of data that can then be [downloaded](#raw-retrieval) or [rendered for the Web](#web-rendering).
 
-The syntax highlighting is done using [codemirrors](https://github.com/codemirror/codemirror) javascript library.
+## Paste Creation
 
-The icons are from [Font Awesome](https://fortawesome.github.io/Font-Awesome/)
+Pastes can be created with the Web UI (on the home page), from a CLI or shell script(e.g. using `curl`), or programmatically (e.g. using `python-requests`).
 
-## Table of Contents
- * [pbnh](#pbnh)
- * [Table of contents](#table-of-contents)
- * [Usage](#usage)
-    * [Content](#content)
-    * [Sunset](#sunset)
-    * [Mime](#mime)
- * [Render](#render)
+### API
 
-## Usage
-You can create pastes with the webui or though the cli using curl. Currently the only way to upload anything other than text or a redirect is through the cli.
+Any HTTP client may `POST /` with the form inputs described below to create a new paste.
 
-Curl has an option for a form id, you can use c or content to specify the contents of a paste.
-```
-curl -F content=@file.txt servername.com
-```
-Or you can cat a file
-```
-cat file.txt | curl -F c=@- servername.com
-```
-[![asciicast](https://asciinema.org/a/8q5x4a0wrhtm7e2feok4b9i67.png)](https://asciinema.org/a/8q5x4a0wrhtm7e2feok4b9i67)
-We also support strings
-```
-curl -F content="hello world!" servername.com
-```
-To upload a redirect change the form id to r
-```
-curl -F r="https://www.google.com" servername.com
-```
-There are three different inputs allowed in a curl command they are content, sunset, and mime. Sunset and Mime are optional.
-### content or c
-The content is exactly what it sounds like. The content of the file or the string data you want to paste and can be seen in the examples above.
-### sunset
-The sunset is the amount of time you want this paste to be available. If sunset is specified you may specify for it to last a maximum of 24 hours. If unspecified the sunset value is 0 and the paste will not be removed.
+Here's an example in Python:
 
-Currently there is no support for deleting pastes after you create them with a sunset. The sunset is set but no process is cleaning them up.
+``` python
+import requests
+
+# Text
+requests.post("http://pbnh.example.com/", data={"content": "Hello world!"})
+
+# File
+with open("/path/to/file.txt") as content_f:
+    requests.post("http://pbnh.example.com/", files={"content": content_f})
 ```
-curl -F content=@file.txt -F sunset=10 servername.com
+
+#### `content`/`c` (required)
+
+Associate data with the paste.
+
+``` sh
+# Text
+curl --form content="Hello world!" pbnh.example.com
+
+# File (by path)
+curl --form content=@/path/to/file.txt pbnh.example.com
+
+# File (by pipe)
+fortune | curl --form content=@- pbnh.example.com
 ```
-### mime
-The mime type is the type of file. If you want automatic syntax highlighting through the webui or want an image to be displayed you can set the mimetype.
-The default is plain text, pbnh uses [python-magic](https://github.com/ahupp/python-magic) to attempt to guess the buffer mimetype if none is specified.
-A list of mimetypes can be found [here](http://www.freeformatter.com/mime-types-list.html). Only specify the second half of the mimetype.
-For example for the mimetype 'application/pdf' only specify pdf.
+
+##### `redirect`/`r`
+
+Replace the `content` input with one named `redirect` to create a redirect paste.
+The data will be interpreted as a URI target that future clients should be redirected to.
+
+``` sh
+curl --form redirect="https://www.example.com/" pbnh.example.com
 ```
-curl -F content=@file.txt -F mime=plain servername.com
+
+- Note: `redirect` causes the `content` and `mime` inputs to be ignored.
+
+#### `mime`
+
+Specify the [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml) of the paste's data.
+If this is not set, pbnh will attempt to guess it.
+
+``` sh
+curl --form content=@/path/to/file.pdf --form mime=application/pdf pbnh.example.com
 ```
-## Rendering
-You can render files as the browser would want to see them by specifying .<extension> in the url
-Currently things we render with javascript are
-* Markdown (.md)
-* RST (.rst)
-* asciinema (.asciinema)
+
+#### `sunset`
+
+Mark the paste for deletion after a certain period of time (in seconds).
+
+``` sh
+curl --form content="Burn this after 10 seconds!" --form sunset=10 pbnh.example.com
+```
+
+- Note: Currently, there is no automatic mechanism for deleting pastes after their sunset.
+
+## Raw Retrieval
+
+If a file extension is appended to the paste ID in the requested URI (i.e. `GET /<hashid>.<extension>`),
+the paste will be returned unmodified with the `Content-Type` header set to the type associated with the extension.
+Append a `.` with no extension (i.e. `GET /<hashid>.`) to use the type associated with the paste.
+
+## Web Rendering
+
+If only the paste ID is requested (i.e. `GET /<hashid>` or `GET /<hashid>/`),
+the paste will be rendered for a Web browser according to the paste's associated MIME type.
+The associated MIME type can be overridden by appending `/<extension>` to the URI.
+
+Currently, the following types can be rendered:
+
+- [Asciicasts](https://asciinema.org/) (`application/x-asciicast`): `GET /<hashid>/cast`
+
+- [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`):`GET /<hashid>/md`
+
+- [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`): `GET /<hashid>/rst`
+
+Additionally, syntax highlighting is supported for many other text types.

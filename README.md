@@ -1,112 +1,116 @@
-pbnh
-========
-THIS IS NO LONGER VALID WITH THIS BRANCH
-========
-[![MIT License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/travis/bhanderson/pbnh.svg)](https://travis-ci.org/bhanderson/pbnh)
-[![Coverage Status](https://coveralls.io/repos/github/bhanderson/pbnh/badge.svg?branch=master)](https://coveralls.io/github/bhanderson/pbnh?branch=master)
+# pbnh
 
-pbnh is our implementation of a pastebin server using flask and postgres or sqlite
+A [Content-Addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [Pastebin](https://en.wikipedia.org/wiki/Pastebin) featuring
 
-It is highly derived from [silverp1's](https://github.com/silverp1) and [buhman's](https://github.com/buhman) project [pb](https://github.com/ptpb/pb) and they deserve the recognition for this idea.
+- Syntax Highlighting by [CodeMirror](https://github.com/codemirror/codemirror)
+- Asciicast Rendering with [asciinema player](https://github.com/asciinema/asciinema-player)
+- Icons from [Font Awesome](https://github.com/FortAwesome/Font-Awesome)
+- and more!
 
-The syntax highlighting is done using [codemirrors](https://github.com/codemirror/codemirror) javascript library.
-
-The icons are from [Font Awesome](https://fortawesome.github.io/Font-Awesome/)
-
-pbnh requires at least Python 3.3
-
-## Table of Contents
- * [pbnh](#pbnh)
- * [Table of contents](#table-of-contents)
- * [Installation](#installation)
- * [Usage](#usage)
-    * [Content](#content)
-    * [Sunset](#sunset)
-    * [Mime](#mime)
- * [Render](#rendering)
- * [Tests](#tests)
- * [Dependency](#dependency)
-
-## Installation
-Note, psycopg2 is a C extension module for postgres. You can grab the dependencies by either installing python-psycopg2 from your package manager, or grab libpq-dev as well as python3-dev and gcc if you don't already have them.
-
-To install the pbnh package:
-```
-$ git clone https://github.com/bhanderson/pbnh.git
-$ cd pbnh
-$ pip install .
-```
-[![asciicast](https://asciinema.org/a/75sd1vwb395kp997phsowfcvs.png)](https://asciinema.org/a/75sd1vwb395kp997phsowfcvs)
-
-## Configuration
-To configure pbnh, copy the sample config to ~/.config/pbnh/config.yml and edit it as desired. You can also use the default config in conf.py.
-
-To configure postgres (assuming debian/ubuntu, other distros should be similar):
-```
-# apt install postgres
-# su - postgres
-$ createuser -s $USERNAME
-python3 db/createdb.py
-```
-
-## Configure using docker-compose
-- Install docker-compose by following the instructions here:
-  https://docs.docker.com/compose/install/
-- Copy `sample_config.yml` to `~/.config/pbnh.yml` and configure as desired
-- Build the container with `docker-compose build`
-- Launch the container with `docker-compose up`
-- The webui should be available at `localhost:8000`
+It is highly derived from [silverp1](https://github.com/silverp1)'s and [buhman](https://github.com/buhman)'s project [pb](https://github.com/ptpb/pb), and they deserve recognition for this idea.
 
 ## Usage
-You can create pastes with the webui or though the cli using curl. Currently the only way to upload anything other than text or a redirect is through the cli.
 
-Curl has an option for a form id, you can use c or content to specify the contents of a paste.
-```
-curl -F content=@file.txt servername.com
-```
-Or you can cat a file
-```
-cat file.txt | curl -F c=@- servername.com
-```
-[![asciicast](https://asciinema.org/a/8q5x4a0wrhtm7e2feok4b9i67.png)](https://asciinema.org/a/8q5x4a0wrhtm7e2feok4b9i67)
-We also support strings
-```
-curl -F content="hello world!" servername.com
-```
-To upload a redirect change the form id to r
-```
-curl -F r="https://www.google.com" servername.com
-```
-There are three different inputs allowed in a curl command they are content, sunset, and mime. Sunset and Mime are optional.
-### content or c
-The content is exactly what it sounds like. The content of the file or the string data you want to paste and can be seen in the examples above.
-### redirect or r
-You can submit a url to be a 302 redirect by specifying the form as r or redirect
-### sunset
-The sunset is the amount of time you want this paste to be available. If sunset is specified you may specify for it to last a maximum of 24 hours. If unspecified the sunset value is 0 and the paste will not be removed.
+See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) for usage details.
 
-Currently there is no support for deleting pastes after you create them with a sunset. The sunset is set but no process is cleaning them up.
+## Deployment
+
+A pre-built image of the project is [available from Docker Hub](https://hub.docker.com/r/tucked/pbnh):
+
+```sh
+docker pull tucked/pbnh:latest
 ```
-curl -F content=@file.txt -F sunset=10 servername.com
+
+Alternatively, it can always be built locally:
+
+``` sh
+docker build --tag pbnh:latest .
 ```
-### mime
-The mime type is the type of file. If you want automatic syntax highlighting through the webui or want an image to be displayed you can set the mimetype.
-The default is plain text, pbnh uses [python-magic](https://github.com/ahupp/python-magic) to attempt to guess the buffer mimetype if none is specified.
-A list of mimetypes can be found [here](http://www.freeformatter.com/mime-types-list.html). Only specify the second half of the mimetype.
-For example for the mimetype 'application/pdf' only specify pdf.
+
+### Configuration
+
+Before deploying, create a configuration file that tells the app _how_ to run:
+
+``` sh
+edit sample_config.yml
 ```
-curl -F content=@file.txt -F mime=plain servername.com
+
+Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
+Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/14/dialects/index.html) should work;
+however, only SQLite and PostgreSQL are currently tested.
+
+If the server is not configured correctly, it will produce an error like this:
+
 ```
-## Rendering
-You can render files as the browser would want to see them by specifying .<extension> in the url
-Currently things we render with javascript are
-* Markdown (.md)
-* RST (.rst)
-* asciinema (.asciinema)
-## Tests
-To install the dependencies required for running tests, simply run
+[2023-02-28 07:07:03 +0000] [6] [WARNING] [Errno 2] Unable to load configuration file (No such file or directory): '/etc/pbnh.yaml'
+[2023-02-28 07:07:03 +0000] [6] [ERROR] SQLALCHEMY_DATABASE_URI is not set in the config.
+Failed to find application object: 'create_app(check_db=True)'
+[2023-02-28 07:07:03 +0000] [6] [INFO] Worker exiting (pid: 6)
+[2023-02-28 07:07:03 +0000] [1] [INFO] Shutting down: Master
+[2023-02-28 07:07:03 +0000] [1] [INFO] Reason: App failed to load.
 ```
-pip install -r tests_require.txt
+
+### Initialization
+
+For the sake of demonstration, this guide will set up an SQLite database.
+
+Start by setting this in the configuration file: `SQLALCHEMY_DATABASE_URI: sqlite:////pbnh/tmpdb.sqlite`
+Then, create a file to use for that database (and make it editable to the container user):
+
+``` sh
+touch paste.sqlite
+chmod 666 paste.sqlite
 ```
-Tests can be ran by running nosetests in the pbnh directory or by specifying a specific test
+
+Next, initialize the database:
+
+``` sh
+docker run --interactive --tty \
+    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
+    pbnh:latest pipenv run flask --app pbnh db init
+```
+
+If the database is not initialized correctly, the server will produce an error like this:
+
+```
+[2023-02-28 07:13:52 +0000] [7] [INFO] /etc/pbnh.yaml was loaded successfully.
+[2023-02-28 07:13:52 +0000] [7] [ERROR] (sqlite3.OperationalError) no such table: paste
+[SQL: SELECT paste.id AS paste_id, paste.hashid AS paste_hashid, paste.ip AS paste_ip, paste.timestamp AS paste_timestamp, paste.mime AS paste_mime, paste.sunset AS paste_sunset, paste.data AS paste_data
+FROM paste
+WHERE paste.hashid = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('Has the database been initialized?', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+Failed to find application object: 'create_app(check_db=True)'
+[2023-02-28 07:13:52 +0000] [7] [INFO] Worker exiting (pid: 7)
+[2023-02-28 07:13:53 +0000] [1] [INFO] Shutting down: Master
+[2023-02-28 07:13:53 +0000] [1] [INFO] Reason: App failed to load.
+```
+
+### Execution
+
+Finally, start the app:
+
+``` sh
+docker run --interactive --tty \
+    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
+    --publish 12345:8000 \
+    pbnh:latest
+```
+
+Then, open http://localhost:12345/ in a browser.
+
+Note: In a production environment, a reverse proxy (e.g. nginx) should be deployed in front of the app.
+See https://flask.palletsprojects.com/en/2.2.x/deploying/ for more information.
+
+## Development
+
+To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yml`:
+
+``` sh
+docker compose -f docker-compose.test.yml run sut
+```
+
+Note: This pattern is meant to be compatible with [automated repository testing on Docker Hub](https://docs.docker.com/docker-hub/builds/automated-testing/).
