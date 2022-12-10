@@ -1,17 +1,25 @@
 import io
 import json
-from os.path import dirname, join, realpath
+import os.path
 
 from docutils.core import publish_parts
-from flask import abort, Blueprint, redirect, render_template, Response, request
-from flask import send_file, send_from_directory
+from flask import (
+    abort,
+    Blueprint,
+    current_app,
+    redirect,
+    render_template,
+    request,
+    Response,
+    send_file,
+    send_from_directory,
+)
 from sqlalchemy import exc
 from werkzeug.datastructures import FileStorage
 
 from pbnh import util
 
 
-SITE_ROOT = realpath(dirname(__file__))
 blueprint = Blueprint("views", __name__)
 
 
@@ -22,7 +30,7 @@ def hello():
 
 @blueprint.route("/about.md", methods=["GET"])
 def about():
-    with open(join(SITE_ROOT, "static", "about.md"), "r") as aboutfile:
+    with open(os.path.join(current_app.static_folder, "about.md"), "r") as aboutfile:
         data = aboutfile.read()
     return render_template("markdown.html", paste=data)
 
