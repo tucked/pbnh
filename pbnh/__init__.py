@@ -34,6 +34,9 @@ def create_app(
         # Config can be provided via override_config,
         # so warn instead of failing:
         logger.warning(exc)
+    except (ValueError, yaml.parser.ParserError):
+        logger.exception(f"{config_path} is malformed!")
+        raise
     else:
         logger.info(f"loaded {config_path} successfully")
 
