@@ -24,6 +24,16 @@ def test_create_dupe(paster):
     assert created == {"id": 1, "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30"}
 
 
+def test_create_collision(paster):
+    """Collisions are treated the same as duplicates."""
+    with paster as p:
+        with open("tests/shattered-1.pdf", mode="rb") as f:
+            created1 = p.create(f.read())
+        with open("tests/shattered-2.pdf", mode="rb") as f:
+            created2 = p.create(f.read())
+    assert created2 == created1
+
+
 def test_query_id(paster):
     timestamp = datetime.now()
     with paster as p:
