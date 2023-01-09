@@ -50,26 +50,22 @@ class _Paster:
             # so we do not care about the irreversibility of SHA1:
             usedforsecurity=False,
         ).hexdigest()
-        collision = self.query(hashid=sha1)
-        if collision:
-            pasteid = collision.get("id")
+        paste = Paste(
+            hashid=sha1,
+            ip=ip,
+            mime=mime,
+            sunset=sunset,
+            timestamp=timestamp,
+            data=data,
+        )
+        try:
+            self.session.add(paste)
+            self.session.commit()
+        except IntegrityError:
+            self.session.rollback()
+            pasteid = self.query(hashid=sha1).get("id")
         else:
-            paste = Paste(
-                hashid=sha1,
-                ip=ip,
-                mime=mime,
-                sunset=sunset,
-                timestamp=timestamp,
-                data=data,
-            )
-            try:
-                self.session.add(paste)
-                self.session.commit()
-            except IntegrityError:
-                pasteid = "HASH COLLISION"
-                self.session.rollback()
-            else:
-                pasteid = paste.id
+            pasteid = paste.id
         return {"id": pasteid, "hashid": sha1}
 
     def query(self, id=None, hashid=None):
