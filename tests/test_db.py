@@ -66,11 +66,22 @@ def test_query_hash(paster):
     }
 
 
+def test_query_mutual_exclusion(paster):
+    with paster as p:
+        with pytest.raises(ValueError):
+            p.query(id=1, hashid="f872a542a8289d2273f6cb455198e06126f4ec30")
+
+
 def test_query_none(paster):
     with paster as p:
         p.create(b"This is a test paste")
         lookup = p.query()
     assert lookup is None
+
+
+def test_query_nonexistent(paster):
+    with paster as p:
+        assert p.query(hashid="nonexistent") is None
 
 
 def test_delete_id(paster):

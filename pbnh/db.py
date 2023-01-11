@@ -4,14 +4,14 @@ import hashlib
 from flask import current_app, g
 from sqlalchemy import create_engine
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
-from sqlalchemy.exc import DataError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import declarative_base, Session
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+_Base = declarative_base()
 
 
-class Paste(Base):
+class _Paste(_Base):
     """Class to define the paste table
 
     paste
@@ -39,18 +39,18 @@ class Paste(Base):
 
 
 class _Paster:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, session, /):
+        self._session = session
 
     def create(self, data, ip=None, mime=None, sunset=None, timestamp=None):
-        sha1 = hashlib.sha1(
+        hashid = hashlib.sha1(
             data,
             # If a user has the hash, we will give them the content,
             # so we do not care about the irreversibility of SHA1:
             usedforsecurity=False,
         ).hexdigest()
-        paste = Paste(
-            hashid=sha1,
+        paste = _Paste(
+            hashid=hashid,
             ip=ip,
             mime=mime,
             sunset=sunset,
@@ -58,58 +58,53 @@ class _Paster:
             data=data,
         )
         try:
-            self.session.add(paste)
-            self.session.commit()
+            with self._session.begin():
+                self._session.add(paste)
         except IntegrityError:
-            self.session.rollback()
-            pasteid = self.query(hashid=sha1).get("id")
-        else:
-            pasteid = paste.id
-        return {"id": pasteid, "hashid": sha1}
+            pass  # A paste with that hashid already exists.
+        # TODO Increase performance by just returning the hashid!
+        #      paste.id is no longer public.
+        return {
+            key: value
+            for key, value in self.query(hashid=hashid).items()
+            if key in {"id", "hashid"}
+        }
 
-    def query(self, id=None, hashid=None):
-        result = None
-        if id:
-            try:
-                result = self.session.query(Paste).filter(Paste.id == id).first()
-            except DataError:
-                self.session.rollback()
-                raise ValueError
-        elif hashid:
-            try:
-                result = (
-                    self.session.query(Paste).filter(Paste.hashid == hashid).first()
-                )
-            except DataError:
-                self.session.rollback()
-                raise ValueError
+    def _query(self, *, id=None, hashid=None):
+        if hashid is not None:
+            if id is not None:
+                raise ValueError("id and hashid are mutually exclusive.")
+            filter_ = _Paste.hashid == hashid
+        elif id is not None:
+            filter_ = _Paste.id == id
         else:
             return None
-        if result:
-            result = {
-                "id": result.id,
-                "hashid": result.hashid,
-                "ip": result.ip,
-                "mime": result.mime,
-                "timestamp": result.timestamp,
-                "sunset": result.sunset,
-                "data": result.data,
-            }
+        # Beware: This autobegins a transaction!
+        return self._session.query(_Paste).filter(filter_).first()
 
-        return result
+    def query(self, *, id=None, hashid=None):
+        with self._session.begin():
+            result = self._query(id=id, hashid=hashid)
+            if result:
+                return {
+                    "data": result.data,
+                    "hashid": result.hashid,
+                    "id": result.id,
+                    "ip": result.ip,
+                    "mime": result.mime,
+                    "sunset": result.sunset,
+                    "timestamp": result.timestamp,
+                }
+        return None
 
-    def delete(self, id=None, hashid=None):
-        if id:
-            result = self.session.query(Paste).filter(Paste.id == id).first()
-        elif hashid:
-            result = self.session.query(Paste).filter(Paste.hashid == hashid).first()
-        else:
-            return None
-        self.session.delete(result)
-        self.session.commit()
+    def delete(self, *, id=None, hashid=None):
+        with self._session.begin():
+            result = self._query(id=id, hashid=hashid)
+            if result:
+                self._session.delete(result)
 
 
-def get_engine():
+def _get_engine():
     try:
         return g.engine
     except AttributeError:
@@ -119,13 +114,13 @@ def get_engine():
 
 @contextlib.contextmanager
 def paster_context():
-    with Session(get_engine()) as session:
+    with Session(_get_engine()) as session:
         yield _Paster(session)
 
 
-def init_db(engine=None):
-    Base.metadata.create_all(engine or get_engine())
+def init_db():
+    _Base.metadata.create_all(_get_engine())
 
 
-def undo_db(engine=None):
-    Paste.__table__.drop(engine or get_engine())
+def undo_db():
+    _Paste.__table__.drop(_get_engine())
