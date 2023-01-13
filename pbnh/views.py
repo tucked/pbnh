@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 import io
 import json
 import mimetypes
-import os.path
+from pathlib import Path
+from typing import Any
 
 from docutils.core import publish_parts
 from flask import (
@@ -13,50 +14,26 @@ from flask import (
     render_template,
     request,
     Response,
-    send_file,
-    send_from_directory,
 )
 import magic
-from werkzeug.datastructures import FileStorage
 
 from pbnh import db
 
 
-def getMime(data=None, mimestr=None):
-    if mimestr:
-        return mimetypes.guess_type("file.{0}".format(mimestr))[0]
-    elif data:
-        return magic.from_buffer(data, mime=True)
-    return "text/plain"
-
-
 blueprint = Blueprint("views", __name__)
+REDIRECT_MIME = "redirect"  # TODO should probably be "text/x.redirect"
+# https://datatracker.ietf.org/doc/html/rfc6838#section-3.4
+# https://en.wikipedia.org/wiki/Media_type#Unregistered_tree
 
 
-@blueprint.route("/", methods=["GET"])
-def hello():
+@blueprint.get("/")
+def index():
     return render_template("index.html")
 
 
-@blueprint.route("/about.md", methods=["GET"])
-def about():
-    with open(os.path.join(current_app.static_folder, "about.md"), "r") as aboutfile:
-        data = aboutfile.read()
-    return render_template("markdown.html", paste=data)
-
-
-@blueprint.route("/static/<path:path>")
-def send_static(path):
-    return send_from_directory("static", path)
-
-
-@blueprint.route("/", methods=["POST"])
-def post_paste():
-    if request.headers.getlist("X-Forwarded-For"):
-        addr = request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        addr = request.remote_addr
-
+@blueprint.post("/")
+def create_paste() -> tuple[dict[str, str], int]:
+    """Create a new paste."""
     # Calculate the expiration.
     try:
         sunset = (request.date or datetime.now(timezone.utc)) + timedelta(
@@ -67,113 +44,121 @@ def post_paste():
     except ValueError:
         abort(400)
 
-    mimestr = request.form.get("mime")
-    redirectstr = request.form.get("r") or request.form.get("redirect")
-    if redirectstr:
-        with db.paster_context() as pstr:
-            j = pstr.create(
-                redirectstr.encode("utf-8"), mime="redirect", ip=addr, sunset=sunset
-            )
-        if j:
-            if isinstance(j, str):
-                return j
-            j["link"] = request.url + str(j.get("hashid"))
-        return json.dumps(j), 201
-    inputstr = request.form.get("content") or request.form.get("c")
-    # we got string data
-    if inputstr and isinstance(inputstr, str):
-        with db.paster_context() as pstr:
-            j = pstr.create(
-                inputstr.encode("utf-8"), mime=mimestr, ip=addr, sunset=sunset
-            )
-        if j:
-            j["link"] = request.url + str(j.get("hashid"))
-        return json.dumps(j), 201
-    files = request.files.get("content") or request.files.get("c")
-    # we got file data
-    if files and isinstance(files, FileStorage):
-        data = files.stream.read()
-        mime = getMime(data=data, mimestr=mimestr)
-        with db.paster_context() as pstr:
-            j = pstr.create(data, mime=mime, ip=addr, sunset=sunset)
-        if j:
-            if isinstance(j, str):
-                return j
-            j["link"] = request.url + str(j.get("hashid"))
-        return json.dumps(j), 201
-    abort(400)
-
-
-@blueprint.route("/<string:paste_id>", methods=["GET"])
-def view_paste(paste_id):
-    """
-    If there are no extensions or slashes check if the mimetype is text, if it
-    is text attempt to highlight it. If not return the data and set the
-    mimetype so the browser can attempt to render it.
-    """
-    with db.paster_context() as pstr:
-        try:
-            query = pstr.query(hashid=paste_id) or abort(404)
-        except ValueError:
-            abort(404)
-    mime = query.get("mime")
-    data = query.get("data")
-    if mime == "redirect":
-        return redirect(data.decode("utf-8"), code=302)
-    if mime.startswith("text/"):
-        return render_template("paste.html", paste=data.decode("utf-8"), mime=mime)
+    # Get the paste data and MIME type.
+    mime = None
+    if location := request.form.get("redirect") or request.form.get("r"):
+        data = location.encode("utf-8")
+        mime = REDIRECT_MIME
+    elif text := request.form.get("content") or request.form.get("c"):
+        data = text.encode("utf-8")
+        mime = request.form.get("mime")
+        if mime and "/" not in mime:
+            mime = f"text/{mime}"
+    elif file_storage := request.files.get("content") or request.files.get("c"):
+        data = file_storage.stream.read()
+        mime = (
+            request.form.get("mime")
+            or mimetypes.guess_type(file_storage.filename or "")[0]
+        )
     else:
-        data = io.BytesIO(query.get("data"))
-        return send_file(data, mimetype=mime)
+        abort(400)  # TODO description="redirect/r or content/c not set"
+
+    # Create the paste.
+    with db.paster_context() as paster:
+        paste = paster.create(
+            data,
+            mime=mime or magic.from_buffer(data, mime=True),
+            # If the request was forwarded from a reverse proxy (e.g. nginx)
+            # request.remote_addr is the proxy, not the client:
+            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+            sunset=sunset,
+        )
+
+    # Return the paste.
+    paste["link"] = request.url + paste["hashid"]
+    return paste, 201
 
 
-@blueprint.route("/<string:paste_id>.<string:filetype>")
-def view_paste_with_extension(paste_id, filetype):
-    with db.paster_context() as pstr:
+@blueprint.get("/about.md")
+def about() -> str:
+    with open(Path(current_app.static_folder or "static") / "about.md") as about_f:
+        return render_template("markdown.html", paste=about_f.read())
+
+
+def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
+    if mime.startswith("text/"):
         try:
-            query = pstr.query(hashid=paste_id)
-        except ValueError:
-            abort(404)
-    if filetype == "md":
-        data = query.get("data").decode("utf-8")
-        return render_template("markdown.html", paste=data)
-    if filetype == "rst":
-        data = query.get("data").decode("utf-8")
-        return Response(publish_parts(data, writer_name="html")["html_body"])
-    if filetype == "asciinema":
+            text = paste["data"].decode("utf-8")
+        except UnicodeDecodeError:
+            # TODO move abort out
+            abort(422)  # https://datatracker.ietf.org/doc/html/rfc4918#section-11.2
+        if mime == "text/markdown":
+            return render_template("markdown.html", paste=text)
+        if mime in {"text/x-rst", "text/prs.fallenstein.rst"}:
+            # https://github.com/python/cpython/issues/101137
+            return Response(publish_parts(text, writer_name="html")["html_body"])
+        return render_template("paste.html", paste=text, mime=mime)
+    if mime in {"application/asciicast+json", "application/x-asciicast"}:
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
         params = {}
-        for key, value in request.args.to_dict().items():
+        for key, value in request.args.items():
             try:
                 params[key] = json.loads(value)
             except json.JSONDecodeError:
                 params[key] = str(value)
         return render_template(
             "asciinema.html",
-            pasteid=paste_id,
+            pasteid=paste["hashid"],
             params=params,
         )
-    data = io.BytesIO(query.get("data"))
-    mime = getMime(mimestr=filetype)
-    return Response(data, mimetype=mime)
+    return Response(io.BytesIO(paste["data"]), mimetype=mime)
 
 
-@blueprint.route("/<string:paste_id>/<string:filetype>")
-def view_paste_with_highlighting(paste_id, filetype):
-    if not filetype:
-        filetype = "txt"
-    with db.paster_context() as pstr:
-        try:
-            query = pstr.query(hashid=paste_id)
-        except ValueError:
-            abort(404)
-    return render_template(
-        "paste.html", paste=query["data"].decode("utf-8"), mime=filetype
+@blueprint.get("/<string:hashid>")
+def view_paste(hashid: str) -> Response | str:
+    """Render according to the MIME type."""
+    with db.paster_context() as paster:
+        paste = paster.query(hashid=hashid) or abort(404)
+    if paste["mime"] == REDIRECT_MIME:
+        return redirect(paste["data"].decode("utf-8"), 302)
+    return _rendered(paste, paste["mime"])
+
+
+def _guess_type(url: str) -> None | str:
+    return mimetypes.guess_type(url, strict=False)[0] or {
+        ".cast": "application/x-asciicast",
+        ".rst": "text/x-rst",
+    }.get(Path(url).suffix)
+
+
+@blueprint.get("/<string:hashid>.<string:extension>")  # TODO GET /<hashid>.
+def view_paste_with_extension(hashid: str, extension: str) -> Response:
+    """Let the browser handle rendering."""
+    if extension == "asciinema":
+        # .asciinema is a legacy pbnh thing...
+        # asciinema used to use .json (application/asciicast+json),
+        # and now it uses .cast (application/x-asciicast).
+        return redirect(f"/{hashid}/cast", 301)
+    with db.paster_context() as paster:
+        paste = paster.query(hashid=hashid) or abort(404)
+    return Response(
+        io.BytesIO(paste["data"]),
+        # Response will default to text/html
+        # (which is not what the user asked for),
+        # so fail if the type cannot be guessed:
+        mimetype=_guess_type(request.url) or abort(422),
     )
 
 
-@blueprint.route("/error")
+@blueprint.get("/<string:hashid>/<string:extension>")
+def view_paste_with_highlighting(hashid: str, extension: str) -> Response | str:
+    """Render as a requested type."""
+    with db.paster_context() as paster:
+        paste = paster.query(hashid=hashid) or abort(404)
+    return _rendered(paste, _guess_type(f"{hashid}.{extension}") or abort(422))
+
+
 @blueprint.errorhandler(404)
 def fourohfour(e=None):
     return render_template("404.html"), 404
