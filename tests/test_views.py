@@ -97,6 +97,17 @@ def test_paste_not_text(test_client):
     assert response.status_code == 200
 
 
+@pytest.mark.xfail(
+    raises=UnicodeDecodeError, reason="Highlighting assumes data is UTF-8."
+)
+def test_paste_non_utf8(test_client):
+    response = test_client.post("/", data={"content": (BytesIO(b"\xff"), "test")})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}/txt")
+    assert response.status_code == 200
+
+
 def test_paste_sunset(test_client):
     response = test_client.post(
         "/", data={"content": (BytesIO(b"contents"), "test"), "sunset": "pdf"}

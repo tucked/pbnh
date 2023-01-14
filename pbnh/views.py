@@ -14,7 +14,6 @@ from flask import (
     send_file,
     send_from_directory,
 )
-from sqlalchemy import exc
 from werkzeug.datastructures import FileStorage
 
 from pbnh import util
@@ -60,25 +59,19 @@ def post_paste():
     inputstr = request.form.get("content") or request.form.get("c")
     # we got string data
     if inputstr and isinstance(inputstr, str):
-        try:
-            j = util.stringData(inputstr, addr=addr, sunset=sunset, mime=mimestr)
-            if j:
-                j["link"] = request.url + str(j.get("hashid"))
-            return json.dumps(j), 201
-        except (exc.OperationalError, exc.InternalError):
-            abort(500)
+        j = util.stringData(inputstr, addr=addr, sunset=sunset, mime=mimestr)
+        if j:
+            j["link"] = request.url + str(j.get("hashid"))
+        return json.dumps(j), 201
     files = request.files.get("content") or request.files.get("c")
     # we got file data
     if files and isinstance(files, FileStorage):
-        try:
-            j = util.fileData(files, addr=addr, sunset=sunset, mimestr=mimestr)
-            if j:
-                if isinstance(j, str):
-                    return j
-                j["link"] = request.url + str(j.get("hashid"))
-            return json.dumps(j), 201
-        except (exc.OperationalError, exc.InternalError):
-            abort(500)
+        j = util.fileData(files, addr=addr, sunset=sunset, mimestr=mimestr)
+        if j:
+            if isinstance(j, str):
+                return j
+            j["link"] = request.url + str(j.get("hashid"))
+        return json.dumps(j), 201
     abort(400)
 
 
@@ -140,11 +133,9 @@ def view_paste_with_highlighting(paste_id, filetype):
     query = util.getPaste(paste_id)
     if not query:
         abort(404)
-    data = query.get("data")
-    try:
-        return render_template("paste.html", paste=data.decode("utf-8"), mime=filetype)
-    except UnicodeDecodeError:
-        return abort(500)
+    return render_template(
+        "paste.html", paste=query["data"].decode("utf-8"), mime=filetype
+    )
 
 
 @blueprint.route("/error")
