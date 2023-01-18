@@ -42,6 +42,14 @@ class _Paste(_Base):  # type: ignore
     __table_args__ = (UniqueConstraint("hashid", name="unique_hash"),)
 
 
+class PasteDBError(Exception):
+    """There was a DB-related problem."""
+
+
+class HashCollision(PasteDBError):
+    """A paste could not be created because of a SHA1 collision."""
+
+
 class _Paster:
     def __init__(self, session: Session, /) -> None:
         self._session = session
@@ -68,16 +76,19 @@ class _Paster:
             timestamp=timestamp,
             data=data,
         )
+        query = None
         try:
             with self._session.begin():
                 self._session.add(paste)
-        except IntegrityError:
-            pass  # A paste with that hashid already exists.
+        except IntegrityError as exc:  # A paste with that hashid already exists.
+            query = self.query(hashid=hashid) or {}
+            if query["data"] != data:
+                raise HashCollision(hashid) from exc
         # TODO Increase performance by just returning the hashid!
         #      paste.id is no longer public.
         return {
             key: value
-            for key, value in (self.query(hashid=hashid) or {}).items()
+            for key, value in (query or self.query(hashid=hashid) or {}).items()
             if key in {"id", "hashid"}
         }
 

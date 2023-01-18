@@ -64,15 +64,18 @@ def create_paste() -> tuple[dict[str, str], int]:
         abort(400)  # TODO description="redirect/r or content/c not set"
 
     # Create the paste.
-    with db.paster_context() as paster:
-        paste = paster.create(
-            data,
-            mime=mime,
-            # If the request was forwarded from a reverse proxy (e.g. nginx)
-            # request.remote_addr is the proxy, not the client:
-            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
-            sunset=sunset,
-        )
+    try:
+        with db.paster_context() as paster:
+            paste = paster.create(
+                data,
+                mime=mime,
+                # If the request was forwarded from a reverse proxy (e.g. nginx)
+                # request.remote_addr is the proxy, not the client:
+                ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+                sunset=sunset,
+            )
+    except db.HashCollision:
+        abort(409)
 
     # Return the paste.
     paste["link"] = request.url + paste["hashid"]

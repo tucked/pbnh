@@ -25,13 +25,13 @@ def test_create_dupe(paster):
 
 
 def test_create_collision(paster):
-    """Collisions are treated the same as duplicates."""
+    """Collisions cause an exception."""
     with paster as p:
         with open("tests/shattered-1.pdf", mode="rb") as f:
-            created1 = p.create(f.read())
+            p.create(f.read())
         with open("tests/shattered-2.pdf", mode="rb") as f:
-            created2 = p.create(f.read())
-    assert created2 == created1
+            with pytest.raises(pbnh.db.HashCollision):
+                p.create(f.read())
 
 
 def test_query_id(paster):

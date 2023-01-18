@@ -160,3 +160,12 @@ def test_ip_forwarding(content_key, test_client):
         "/", headers={"X-Forwarded-For": "127.0.0.1"}, data={content_key: "abc"}
     )
     assert response.status_code == 201
+
+
+def test_post_collision(content_key, test_client):
+    with open("tests/shattered-1.pdf", mode="rb") as f:
+        response = test_client.post("/", data={content_key: (f, f.name)})
+    assert response.status_code == 201
+    with open("tests/shattered-2.pdf", mode="rb") as f:
+        response = test_client.post("/", data={content_key: (f, f.name)})
+    assert response.status_code == 409
