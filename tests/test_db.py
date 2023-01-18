@@ -13,70 +13,40 @@ def paster(app):
 
 def test_create_new(paster):
     with paster as p:
-        created = p.create(b"This is a test paste")
-    assert created == {"id": 1, "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30"}
+        assert (
+            p.create(b"This is a test paste")
+            == "f872a542a8289d2273f6cb455198e06126f4ec30"
+        )
 
 
 def test_create_dupe(paster):
+    data = b"This is a test paste"
     with paster as p:
-        created = p.create(b"This is a test paste")
-        created = p.create(b"This is a test paste")
-    assert created == {"id": 1, "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30"}
+        assert p.create(data) == p.create(data)
 
 
 def test_create_collision(paster):
     """Collisions cause an exception."""
     with paster as p:
         with open("tests/shattered-1.pdf", mode="rb") as f:
-            p.create(f.read())
+            hashid = p.create(f.read())
         with open("tests/shattered-2.pdf", mode="rb") as f:
-            with pytest.raises(pbnh.db.HashCollision):
+            with pytest.raises(pbnh.db.HashCollision, match=f"^{hashid}$"):
                 p.create(f.read())
 
 
-def test_query_id(paster):
+def test_query(paster):
+    data = b"This is a test paste"
     timestamp = datetime.now()
     with paster as p:
-        p.create(b"This is a test paste", timestamp=timestamp)
-        lookup = p.query(id=1)
-    assert lookup == {
-        "id": 1,
-        "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30",
-        "ip": None,
-        "mime": "text/plain",
-        "sunset": None,
-        "timestamp": timestamp,
-        "data": b"This is a test paste",
-    }
-
-
-def test_query_hash(paster):
-    timestamp = datetime.now()
-    with paster as p:
-        p.create(b"This is a test paste", timestamp=timestamp)
-        lookup = p.query(hashid="f872a542a8289d2273f6cb455198e06126f4ec30")
-    assert lookup == {
-        "id": 1,
-        "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30",
-        "ip": None,
-        "mime": "text/plain",
-        "sunset": None,
-        "timestamp": timestamp,
-        "data": b"This is a test paste",
-    }
-
-
-def test_query_mutual_exclusion(paster):
-    with paster as p:
-        with pytest.raises(ValueError):
-            p.query(id=1, hashid="f872a542a8289d2273f6cb455198e06126f4ec30")
-
-
-def test_query_none(paster):
-    with paster as p:
-        p.create(b"This is a test paste")
-        lookup = p.query()
-    assert lookup is None
+        assert p.query(hashid=p.create(data, timestamp=timestamp)) == {
+            "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30",
+            "ip": None,
+            "mime": "text/plain",
+            "sunset": None,
+            "timestamp": timestamp,
+            "data": b"This is a test paste",
+        }
 
 
 def test_query_nonexistent(paster):
@@ -84,34 +54,13 @@ def test_query_nonexistent(paster):
         assert p.query(hashid="nonexistent") is None
 
 
-def test_delete_id(paster):
+def test_delete(paster):
     with paster as p:
-        p.create(b"This is a test paste")
-        p.delete(id=1)
-        lookup = p.query(id=1)
-    assert lookup is None
+        hashid = p.create(b"This is a test paste")
+        p.delete(hashid=hashid)
+        assert p.query(hashid=hashid) is None
 
 
-def test_delete_hash(paster):
+def test_delete_nonexistent(paster):
     with paster as p:
-        p.create(b"This is a test paste")
-        p.delete(hashid="f872a542a8289d2273f6cb455198e06126f4ec30")
-        lookup = p.query(id=1)
-    assert lookup is None
-
-
-def test_delete_none(paster):
-    timestamp = datetime.now()
-    with paster as p:
-        p.create(b"This is a test paste", timestamp=timestamp)
-        p.delete()
-        lookup = p.query(id=1)
-    assert lookup == {
-        "id": 1,
-        "hashid": "f872a542a8289d2273f6cb455198e06126f4ec30",
-        "ip": None,
-        "mime": "text/plain",
-        "sunset": None,
-        "timestamp": timestamp,
-        "data": b"This is a test paste",
-    }
+        assert p.delete(hashid="nonexistent") is None

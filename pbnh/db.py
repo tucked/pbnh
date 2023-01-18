@@ -61,10 +61,10 @@ class _Paster:
         mime: Optional[str] = None,
         sunset: Optional[datetime] = None,
         timestamp: Optional[datetime] = None,
-    ) -> dict[str, str]:
+    ) -> str:
         hashid = hashlib.sha1(
             data,
-            # If a user has the hash, we will give them the content,
+            # If a user has the hash, we will give them the data,
             # so we do not care about the irreversibility of SHA1:
             usedforsecurity=False,
         ).hexdigest()
@@ -76,7 +76,6 @@ class _Paster:
             timestamp=timestamp,
             data=data,
         )
-        query = None
         try:
             with self._session.begin():
                 self._session.add(paste)
@@ -84,38 +83,20 @@ class _Paster:
             query = self.query(hashid=hashid) or {}
             if query["data"] != data:
                 raise HashCollision(hashid) from exc
-        # TODO Increase performance by just returning the hashid!
-        #      paste.id is no longer public.
-        return {
-            key: value
-            for key, value in (query or self.query(hashid=hashid) or {}).items()
-            if key in {"id", "hashid"}
-        }
+        return hashid
 
-    def _query(
-        self, *, id: Optional[int] = None, hashid: Optional[str] = None
-    ) -> Optional[_Paste]:
-        if hashid is not None:
-            if id is not None:
-                raise ValueError("id and hashid are mutually exclusive.")
-            filter_ = _Paste.hashid == hashid
-        elif id is not None:
-            filter_ = _Paste.id == id
-        else:
-            return None
+    def _query(self, *, hashid: str) -> _Paste | None:
         # Beware: This autobegins a transaction!
+        filter_ = _Paste.hashid == hashid
         return self._session.query(_Paste).filter(filter_).first()  # type: ignore
 
-    def query(
-        self, *, id: Optional[int] = None, hashid: Optional[str] = None
-    ) -> Optional[dict[str, Any]]:
+    def query(self, *, hashid: str) -> dict[str, Any] | None:
         with self._session.begin():
-            result = self._query(id=id, hashid=hashid)
+            result = self._query(hashid=hashid)
             if result:
                 return {
                     "data": result.data,
                     "hashid": result.hashid,
-                    "id": result.id,
                     "ip": result.ip,
                     "mime": result.mime,
                     "sunset": result.sunset,
@@ -123,9 +104,9 @@ class _Paster:
                 }
         return None
 
-    def delete(self, *, id: Optional[int] = None, hashid: Optional[str] = None) -> None:
+    def delete(self, *, hashid: str) -> None:
         with self._session.begin():
-            result = self._query(id=id, hashid=hashid)
+            result = self._query(hashid=hashid)
             if result:
                 self._session.delete(result)
 

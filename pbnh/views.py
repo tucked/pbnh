@@ -66,7 +66,7 @@ def create_paste() -> tuple[dict[str, str], int]:
     # Create the paste.
     try:
         with db.paster_context() as paster:
-            paste = paster.create(
+            hashid = paster.create(
                 data,
                 mime=mime,
                 # If the request was forwarded from a reverse proxy (e.g. nginx)
@@ -74,12 +74,14 @@ def create_paste() -> tuple[dict[str, str], int]:
                 ip=request.headers.get("X-Forwarded-For", request.remote_addr),
                 sunset=sunset,
             )
-    except db.HashCollision:
-        abort(409)
+    except db.HashCollision as exc:
+        hashid = str(exc)
+        status = 409
+    else:
+        status = 201
 
     # Return the paste.
-    paste["link"] = request.url + paste["hashid"]
-    return paste, 201
+    return {"hashid": hashid, "link": request.url + hashid}, status
 
 
 @blueprint.get("/about.md")
