@@ -169,3 +169,19 @@ def test_post_collision(content_key, test_client):
     with open("tests/shattered-2.pdf", mode="rb") as f:
         response = test_client.post("/", data={content_key: (f, f.name)})
     assert response.status_code == 409
+
+
+def test_get_no_extension(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.")
+    response.status_code == 301
+    response.location == f"/{hashid}.txt"
+
+
+def test_get_no_extension_unguessable(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc", "mime": "fo/shizzle"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.")
+    response.status_code == 302
+    response.location == f"/{hashid}"
