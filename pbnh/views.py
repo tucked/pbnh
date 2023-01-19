@@ -35,14 +35,15 @@ def index() -> str:
 def create_paste() -> tuple[dict[str, str], int]:
     """Create a new paste."""
     # Calculate the expiration.
+    now = request.date or datetime.now(timezone.utc)
     try:
-        sunset = (request.date or datetime.now(timezone.utc)) + timedelta(
-            seconds=int(request.form["sunset"])
-        )
+        sunset = now + timedelta(seconds=int(request.form["sunset"]))
     except KeyError:
         sunset = None
-    except ValueError:
-        abort(400)
+    except ValueError as exc:
+        abort(400, f"sunset: {exc}")
+    if sunset and sunset <= now:
+        abort(400, f"sunset ({sunset}) cannot be at/before the request time ({now}).")
 
     # Get the paste data and MIME type.
     mime = None
@@ -61,7 +62,7 @@ def create_paste() -> tuple[dict[str, str], int]:
             or mimetypes.guess_type(file_storage.filename or "")[0]
         )
     else:
-        abort(400)  # TODO description="redirect/r or content/c not set"
+        abort(400, "No content was sent (via the redirect/r or content/c fields).")
 
     # Create the paste.
     try:
@@ -94,9 +95,8 @@ def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
     if mime.startswith("text/"):
         try:
             text = paste["data"].decode("utf-8")
-        except UnicodeDecodeError:
-            # TODO move abort out
-            abort(422)  # https://datatracker.ietf.org/doc/html/rfc4918#section-11.2
+        except UnicodeDecodeError as exc:
+            abort(422, f"The paste cannot be decoded as text ({exc}).")
         if mime == "text/markdown":
             return render_template("markdown.html", paste=text)
         if mime in {"text/x-rst", "text/prs.fallenstein.rst"}:
@@ -130,11 +130,20 @@ def view_paste(hashid: str) -> flask.typing.ResponseReturnValue | str:
     return _rendered(paste, paste["mime"])
 
 
-def _guess_type(url: str) -> None | str:
-    return mimetypes.guess_type(url, strict=False)[0] or {
-        ".cast": "application/x-asciicast",
-        ".rst": "text/x-rst",
-    }.get(Path(url).suffix)
+def _guess_type(url: str) -> str:
+    suffix = Path(url).suffix
+    return (
+        mimetypes.guess_type(url, strict=False)[0]
+        or {
+            ".cast": "application/x-asciicast",
+            ".rst": "text/x-rst",
+        }.get(suffix)
+        or abort(
+            422,
+            "There is no media type associated with"
+            f" the provided extension ({suffix[1:]}).",
+        )
+    )
 
 
 @blueprint.get("/<string:hashid>.")
@@ -163,7 +172,7 @@ def view_paste_with_extension(
         # Response will default to text/html
         # (which is not what the user asked for),
         # so fail if the type cannot be guessed:
-        mimetype=_guess_type(request.url) or abort(422),
+        mimetype=_guess_type(request.url),
     )
 
 
@@ -183,7 +192,7 @@ def view_paste_with_highlighting(
         # No dice, send them to the base paste page
         # (which will probably just return the raw bytes).
         return redirect(f"/{hashid}", 302)
-    return _rendered(paste, _guess_type(f"{hashid}.{extension}") or abort(422))
+    return _rendered(paste, _guess_type(f"{hashid}.{extension}"))
 
 
 @blueprint.errorhandler(404)

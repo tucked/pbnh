@@ -128,6 +128,11 @@ def test_paste_sunset(content_key, test_client):
     assert response.status_code == 200
 
 
+def test_paste_sunset_immediately(content_key, test_client):
+    response = test_client.post("/", data={content_key: b"abc", "sunset": 0})
+    assert response.status_code == 400
+
+
 @pytest.mark.parametrize("ext", ["asciinema", "md", "rst", "txt"])
 def test_get_ext(content_key, test_client, ext):
     response = test_client.post("/", data={content_key: "abc"})
