@@ -167,11 +167,22 @@ def view_paste_with_extension(
     )
 
 
+@blueprint.get("/<string:hashid>/")
 @blueprint.get("/<string:hashid>/<string:extension>")
-def view_paste_with_highlighting(hashid: str, extension: str) -> Response | str:
+def view_paste_with_highlighting(
+    hashid: str, extension: str = ""
+) -> Response | flask.typing.ResponseReturnValue | str:
     """Render as a requested type."""
     with db.paster_context() as paster:
         paste = paster.query(hashid=hashid) or abort(404)
+    if not extension:
+        # The user didn't provide an extension. Try to guess it...
+        extension = (mimetypes.guess_extension(paste["mime"], strict=False) or "")[1:]
+        if extension:
+            return redirect(f"/{hashid}/{extension}", 301)
+        # No dice, send them to the base paste page
+        # (which will probably just return the raw bytes).
+        return redirect(f"/{hashid}", 302)
     return _rendered(paste, _guess_type(f"{hashid}.{extension}") or abort(422))
 
 

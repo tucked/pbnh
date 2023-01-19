@@ -171,17 +171,22 @@ def test_post_collision(content_key, test_client):
     assert response.status_code == 409
 
 
-def test_get_no_extension(content_key, test_client):
+@pytest.fixture(params=[".", "/"])
+def delimiter(request):
+    return request.param
+
+
+def test_get_no_extension(content_key, test_client, delimiter):
     response = test_client.post("/", data={content_key: "abc"})
     hashid = response.json["hashid"]
-    response = test_client.get(f"/{hashid}.")
+    response = test_client.get(f"/{hashid}{delimiter}")
     response.status_code == 301
-    response.location == f"/{hashid}.txt"
+    response.location == f"/{hashid}{delimiter}txt"
 
 
-def test_get_no_extension_unguessable(content_key, test_client):
+def test_get_no_extension_unguessable(content_key, test_client, delimiter):
     response = test_client.post("/", data={content_key: "abc", "mime": "fo/shizzle"})
     hashid = response.json["hashid"]
-    response = test_client.get(f"/{hashid}.")
+    response = test_client.get(f"/{hashid}{delimiter}")
     response.status_code == 302
     response.location == f"/{hashid}"
