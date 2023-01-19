@@ -21,9 +21,7 @@ from pbnh import db
 
 
 blueprint = Blueprint("views", __name__)
-REDIRECT_MIME = "redirect"  # TODO should probably be "text/x.redirect"
-# https://datatracker.ietf.org/doc/html/rfc6838#section-3.4
-# https://en.wikipedia.org/wiki/Media_type#Unregistered_tree
+REDIRECT_MIME = "text/x.pbnh.redirect"
 
 
 @blueprint.get("/")
@@ -125,7 +123,7 @@ def view_paste(hashid: str) -> flask.typing.ResponseReturnValue | str:
     """Render according to the MIME type."""
     with db.paster_context() as paster:
         paste = paster.query(hashid=hashid) or abort(404)
-    if paste["mime"] == REDIRECT_MIME:
+    if paste["mime"] in {REDIRECT_MIME, "redirect"}:
         return redirect(paste["data"].decode("utf-8"), 302)
     return _rendered(paste, paste["mime"])
 
