@@ -83,7 +83,7 @@ def create_paste() -> tuple[dict[str, str], int]:
     return {"hashid": hashid, "link": request.url + hashid}, status
 
 
-@blueprint.get("/about.md")
+@blueprint.get("/about")
 def about() -> str:
     with open(Path(current_app.static_folder or "static") / "about.md") as about_f:
         return render_template("markdown.html", paste=about_f.read())
@@ -150,6 +150,9 @@ def view_paste_with_extension(
     hashid: str, extension: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Let the browser handle rendering."""
+    if hashid == "about" and extension == "md":
+        # /about used to be /about.md:
+        return redirect("/about", 301)
     if extension == "asciinema":
         # .asciinema is a legacy pbnh thing...
         # asciinema used to use .json (application/asciicast+json),

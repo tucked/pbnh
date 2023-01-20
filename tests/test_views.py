@@ -27,8 +27,14 @@ def test_home(test_client):
 
 
 def test_about(test_client):
-    response = test_client.get("/about.md")
+    response = test_client.get("/about")
     assert response.status_code == 200
+
+
+def test_about_md(test_client):
+    response = test_client.get("/about.md")
+    assert response.status_code == 301
+    assert response.location == "/about"
 
 
 def test_static(test_client):
