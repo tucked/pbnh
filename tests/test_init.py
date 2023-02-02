@@ -23,6 +23,29 @@ def test_config_nondebug(override_config):
     pbnh.create_app(override_config).logger.level != logging.DEBUG
 
 
+@pytest.mark.parametrize("drivername", ["sqlite", "postgresql+psycopg2"])
+def test_legacy_config(monkeypatch, drivername):
+    """Ensure that legacy config is adapted correctly."""
+    dialect, _, driver = drivername.partition("+")
+    database = {
+        "dbname": "paste",
+        "dialect": dialect,
+        "driver": driver,
+        "host": "database.example.com",
+        "password": "WARMACHINEROX",
+        "port": 5432,
+        "username": "someuser",
+    }
+    monkeypatch.setenv(pbnh.CONFIG_PATH_ENV_VAR, "")
+    url = pbnh.create_app({"database": database}).config.get("SQLALCHEMY_DATABASE_URI")
+    assert url.database == database["dbname"]
+    assert url.drivername == drivername
+    assert url.host == database["host"]
+    assert url.password == database["password"]
+    assert url.port == database["port"]
+    assert url.username == database["username"]
+
+
 def test_config_path_env_var(tmp_path, monkeypatch, override_config):
     """Ensure that PBNH_CONFIG can be used to specify a config file."""
     path = tmp_path / "pbnh.yaml"
