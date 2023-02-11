@@ -1,4 +1,3 @@
-import argparse
 import contextlib
 import hashlib
 
@@ -130,20 +129,3 @@ def init_db(engine=None):
 
 def undo_db(engine=None):
     Paste.__table__.drop(engine or get_engine())
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Initialize a paste db")
-    parser.add_argument(
-        "url",
-        default=current_app.config.get("SQLALCHEMY_DATABASE_URI"),
-        help="the database url"
-        " (e.g. dialect+driver://username:password@host:port/database)",
-    )
-    args = parser.parse_args()
-    init_db(create_engine(args.url))
-    print("Database initialized!")
-
-
-if __name__ == "__main__":
-    main()

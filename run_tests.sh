@@ -10,4 +10,5 @@ init_config="$(mktemp)"
 echo "[run]\ninclude = pbnh/__init__.py\n" > "$init_config"
 pipenv run pytest --cov --cov-config "$init_config" --cov-branch --cov-fail-under 100 --cov-report term-missing -v tests/test_init.py
 rm "$init_config"
+pipenv run pytest --cov pbnh.cli --cov-branch --cov-fail-under 100 --cov-report term-missing -v tests/test_cli.py
 pipenv run pytest --cov pbnh --cov-branch --cov-fail-under 80 --cov-report term-missing

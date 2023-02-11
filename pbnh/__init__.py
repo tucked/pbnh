@@ -44,8 +44,10 @@ def create_app(
     app.config.update(override_config or {})
 
     # Register blueprints.
+    import pbnh.cli
     import pbnh.views
 
+    app.register_blueprint(pbnh.cli.blueprint)
     app.register_blueprint(pbnh.views.blueprint)
 
     return app
