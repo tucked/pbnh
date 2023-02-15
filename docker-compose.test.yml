@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_DB=pastedb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  sut:
+    build: .
+    pull_policy: build
+    depends_on:
+      - db
+    command: ./run_tests.sh
