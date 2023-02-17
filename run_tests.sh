@@ -6,4 +6,4 @@ pipenv check --ignore 51668  # https://github.com/sqlalchemy/sqlalchemy/pull/856
 pipenv run black --check pbnh tests
 pipenv run flake8 pbnh tests
 pipenv run bandit --recursive pbnh
-pipenv run pytest --cov pbnh --cov-branch --cov-fail-under 25 --cov-report term-missing
+pipenv run pytest --cov pbnh --cov-branch --cov-fail-under 40 --cov-report term-missing
