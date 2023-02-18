@@ -36,7 +36,7 @@ class TestPost(unittest.TestCase):
         self.app = app.app.test_client()
 
     def tearDown(self):
-        os.unlink(DEFAULTS['database']['dbname'])
+        self.newdb.delete()
 
     def test_home(self):
         response = self.app.get('/')

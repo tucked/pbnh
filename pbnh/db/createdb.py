@@ -1,40 +1,24 @@
 import argparse
 from sqlalchemy import create_engine
-from sqlalchemy_utils import create_database
 
 from pbnh import conf
-from pbnh import app
 from pbnh.db import models
 from pbnh.db.connect import DBConnect
 
 
-class CreateDB():
-    def __init__(self, dialect=None, driver=None, username=None, password=None,
-                 host=None, port=None, dbname=None):
-        """Grab connection information to pass to DBConnect"""
-        self.dialect = dialect or 'sqlite'
-        self.dbname = dbname or app.app.config['CONFIG'].get('database').get('dbname')
-        self.driver = driver
-        self.username = username
-        self.password = password
-        self.host = host
-        self.port = port
+class CreateDB:
+    def __init__(self, *args, **kwargs):
+        self._dbconnect = DBConnect(*args, **kwargs)
+        self.engine = create_engine(str(self))
+
+    def __str__(self):
+        return str(self._dbconnect)
 
     def create(self):
-        connection = DBConnect(
-                dialect=self.dialect,
-                driver=self.driver,
-                username=self.username,
-                password=self.password,
-                host=self.host,
-                port=self.port,
-                dbname=self.dbname
-                )
-        print(connection)
-        create_database(str(connection))
-        engine = create_engine(str(connection))
-        models.Base.metadata.create_all(engine)
-        return connection
+        models.Base.metadata.create_all(self.engine)
+
+    def delete(self):
+        models.Paste.__table__.drop(self.engine)
 
 
 def main():

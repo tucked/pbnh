@@ -15,7 +15,7 @@ class TestPaster(unittest.TestCase):
         self.newdb.create()
 
     def tearDown(self):
-        os.remove('/tmp/pbnh_test.db')
+        self.newdb.delete()
 
     def test_create_new(self):
         with paste.Paster(dialect=dialect, dbname=dbname) as p:

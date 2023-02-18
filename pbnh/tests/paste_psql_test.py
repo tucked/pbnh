@@ -1,7 +1,6 @@
 import unittest
 
 from datetime import datetime
-from sqlalchemy_utils import drop_database
 
 from pbnh.db.createdb import CreateDB
 from pbnh.db.connect import DBConnect
@@ -16,7 +15,7 @@ class TestPaster(unittest.TestCase):
         self.newdb.create()
 
     def tearDown(self):
-        drop_database(str(DBConnect(dialect=dialect, dbname=dbname)))
+        self.newdb.delete()
 
     def test_create_new(self):
         with paste.Paster(dialect=dialect, dbname=dbname) as p:
