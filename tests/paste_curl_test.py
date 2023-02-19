@@ -3,7 +3,7 @@ import json
 import hashlib
 
 from pbnh.app import create_app
-from pbnh.db.createdb import CreateDB
+from pbnh.db import CreateDB
 from io import BytesIO
 
 

@@ -5,7 +5,7 @@ import tempfile
 
 from flask import current_app
 
-from pbnh.db import paste
+from pbnh.db import Paster
 from datetime import datetime, timezone, timedelta
 
 
@@ -25,7 +25,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
         ):
             data = buf.read()
             mime = getMime(data=data, mimestr=mimestr)
-            with paste.Paster(
+            with Paster(
                 dialect=config.get("dialect"),
                 dbname=config.get("dbname"),
                 driver=config.get("driver"),
@@ -43,7 +43,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
 
 def stringData(inputstr, addr=None, sunset=None, mime=None):
     config = getConfig()
-    with paste.Paster(
+    with Paster(
         dialect=config.get("dialect"),
         dbname=config.get("dbname"),
         driver=config.get("driver"),
@@ -77,7 +77,7 @@ def getMime(data=None, mimestr=None):
 
 def getPaste(paste_id):
     config = getConfig()
-    with paste.Paster(
+    with Paster(
         dialect=config.get("dialect"),
         dbname=config.get("dbname"),
         driver=config.get("driver"),
