@@ -56,7 +56,7 @@ python3 db/createdb.py
 - Copy `sample_config.yml` to `~/.config/pbnh.yml` and configure as desired
 - Build the container with `docker-compose build`
 - Launch the container with `docker-compose up`
-- The webui should be available at `localhost:5000`
+- The webui should be available at `localhost:8000`
 
 ## Usage
 You can create pastes with the webui or though the cli using curl. Currently the only way to upload anything other than text or a redirect is through the cli.
