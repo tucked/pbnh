@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import hashlib
 
 from flask import current_app, g
@@ -38,16 +39,9 @@ class Paste(Base):
     __table_args__ = (UniqueConstraint("hashid", name="unique_hash"),)
 
 
-class Paster:
-    def __init__(self, engine=None):
-        self.engine = engine or get_engine()
-
-    def __enter__(self):
-        self.session = Session(self.engine)
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.session.close()
+class _Paster:
+    def __init__(self, session):
+        self.session = session
 
     def create(self, data, ip=None, mime=None, sunset=None, timestamp=None):
         sha1 = hashlib.sha1(
@@ -126,6 +120,12 @@ def get_engine():
     except AttributeError:
         g.engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
         return g.engine
+
+
+@contextlib.contextmanager
+def paster_context():
+    with Session(get_engine()) as session:
+        yield _Paster(session)
 
 
 def init_db(engine=None):

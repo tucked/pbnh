@@ -8,7 +8,7 @@ import pbnh.db
 @pytest.fixture
 def paster(app):
     with app.app_context():
-        yield pbnh.db.Paster()
+        yield pbnh.db.paster_context()
 
 
 def test_create_new(paster):

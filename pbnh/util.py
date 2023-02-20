@@ -2,9 +2,9 @@ import io
 import magic
 import mimetypes
 import tempfile
-
-from pbnh.db import Paster
 from datetime import datetime, timezone, timedelta
+
+from pbnh.db import paster_context
 
 
 def fileData(files, addr=None, sunset=None, mimestr=None):
@@ -18,7 +18,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
         ):
             data = buf.read()
             mime = getMime(data=data, mimestr=mimestr)
-            with Paster() as pstr:
+            with paster_context() as pstr:
                 j = pstr.create(data, mime=mime, ip=addr, sunset=sunset)
                 return j
     except IOError as e:
@@ -27,7 +27,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
 
 
 def stringData(inputstr, addr=None, sunset=None, mime=None):
-    with Paster() as pstr:
+    with paster_context() as pstr:
         j = pstr.create(inputstr.encode("utf-8"), mime=mime, ip=addr, sunset=sunset)
         return j
     return "String save error"
@@ -52,7 +52,7 @@ def getMime(data=None, mimestr=None):
 
 
 def getPaste(paste_id):
-    with Paster() as pstr:
+    with paster_context() as pstr:
         try:
             return pstr.query(hashid=paste_id)
         except ValueError:
