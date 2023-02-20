@@ -8,7 +8,7 @@ from flask import send_file, send_from_directory
 from sqlalchemy import exc
 from werkzeug.datastructures import FileStorage
 
-from pbnh.app import util
+from pbnh import util
 
 
 SITE_ROOT = realpath(dirname(__file__))

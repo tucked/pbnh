@@ -2,7 +2,7 @@ import unittest
 
 from datetime import datetime
 
-from pbnh.app import create_app
+from pbnh import create_app
 from pbnh.db import CreateDB, Paster
 
 

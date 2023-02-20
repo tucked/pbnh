@@ -2,7 +2,7 @@ import unittest
 import json
 import hashlib
 
-from pbnh.app import create_app
+from pbnh import create_app
 from pbnh.db import CreateDB
 from io import BytesIO
 

@@ -11,4 +11,4 @@ COPY Pipfile Pipfile.lock ./
 RUN pipenv install --deploy
 COPY . .
 EXPOSE 5000
-CMD ["pipenv", "run", "gunicorn", "--bind", "0.0.0.0:5000", "pbnh.app:create_app()"]
+CMD ["pipenv", "run", "gunicorn", "--bind", "0.0.0.0:5000", "pbnh:create_app()"]
