@@ -1,7 +1,8 @@
 import argparse
+
+from flask import current_app
 from sqlalchemy import create_engine
 
-from pbnh import get_config
 from pbnh.db import models
 from pbnh.db.connect import DBConnect
 
@@ -22,7 +23,7 @@ class CreateDB:
 
 
 def main():
-    config = get_config().get("database")
+    config = current_app.config["CONFIG"].get("database")
     parser = argparse.ArgumentParser(description="Initialize a paste db")
     parser.add_argument(
         "-t", "--type", default=config.get("dialect"), help="sqlite or postgresql"

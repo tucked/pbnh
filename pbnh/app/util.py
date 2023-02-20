@@ -3,17 +3,14 @@ import magic
 import mimetypes
 import tempfile
 
-from pbnh import get_config
+from flask import current_app
+
 from pbnh.db import paste
-from pbnh.app import app
 from datetime import datetime, timezone, timedelta
 
 
 def getConfig():
-    if app.config.get("CONFIG"):
-        return app.config.get("CONFIG").get("database")
-    else:
-        return get_config().get("database")
+    return current_app.config["CONFIG"].get("database")
 
 
 def fileData(files, addr=None, sunset=None, mimestr=None):

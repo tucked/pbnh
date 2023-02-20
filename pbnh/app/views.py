@@ -3,38 +3,36 @@ import json
 from os.path import dirname, join, realpath
 
 from docutils.core import publish_parts
-from flask import abort, redirect, render_template, Response, request
+from flask import abort, Blueprint, redirect, render_template, Response, request
 from flask import send_file, send_from_directory
 from sqlalchemy import exc
 from werkzeug.datastructures import FileStorage
 
-from pbnh import get_config
-from pbnh.app import app
 from pbnh.app import util
 
 
 SITE_ROOT = realpath(dirname(__file__))
-app.config["CONFIG"] = get_config()
+blueprint = Blueprint("views", __name__)
 
 
-@app.route("/", methods=["GET"])
+@blueprint.route("/", methods=["GET"])
 def hello():
     return render_template("index.html")
 
 
-@app.route("/about.md", methods=["GET"])
+@blueprint.route("/about.md", methods=["GET"])
 def about():
     with open(join(SITE_ROOT, "static", "about.md"), "r") as aboutfile:
         data = aboutfile.read()
     return render_template("markdown.html", paste=data)
 
 
-@app.route("/static/<path:path>")
+@blueprint.route("/static/<path:path>")
 def send_static(path):
     return send_from_directory("static", path)
 
 
-@app.route("/", methods=["POST"])
+@blueprint.route("/", methods=["POST"])
 def post_paste():
     if request.headers.getlist("X-Forwarded-For"):
         addr = request.headers.getlist("X-Forwarded-For")[0]
@@ -76,7 +74,7 @@ def post_paste():
     abort(400)
 
 
-@app.route("/<string:paste_id>", methods=["GET"])
+@blueprint.route("/<string:paste_id>", methods=["GET"])
 def view_paste(paste_id):
     """
     If there are no extensions or slashes check if the mimetype is text, if it
@@ -97,7 +95,7 @@ def view_paste(paste_id):
         return send_file(data, mimetype=mime)
 
 
-@app.route("/<string:paste_id>.<string:filetype>")
+@blueprint.route("/<string:paste_id>.<string:filetype>")
 def view_paste_with_extension(paste_id, filetype):
     query = util.getPaste(paste_id)
     if not query:
@@ -127,7 +125,7 @@ def view_paste_with_extension(paste_id, filetype):
     return Response(data, mimetype=mime)
 
 
-@app.route("/<string:paste_id>/<string:filetype>")
+@blueprint.route("/<string:paste_id>/<string:filetype>")
 def view_paste_with_highlighting(paste_id, filetype):
     if not filetype:
         filetype = "txt"
@@ -141,7 +139,7 @@ def view_paste_with_highlighting(paste_id, filetype):
         return abort(500)
 
 
-@app.route("/error")
-@app.errorhandler(404)
+@blueprint.route("/error")
+@blueprint.errorhandler(404)
 def fourohfour(e=None):
     return render_template("404.html"), 404
