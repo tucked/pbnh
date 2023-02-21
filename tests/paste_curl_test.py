@@ -1,10 +1,10 @@
 import unittest
 import json
 import hashlib
+from io import BytesIO
 
 from pbnh import create_app
-from pbnh.db import CreateDB
-from io import BytesIO
+import pbnh.db
 
 
 class TestPost(unittest.TestCase):
@@ -16,12 +16,13 @@ class TestPost(unittest.TestCase):
                 "SQLALCHEMY_DATABASE_URI": "sqlite:///test_db.sqlite",
             }
         )
-        self.newdb = CreateDB(self.app.config["SQLALCHEMY_DATABASE_URI"])
-        self.newdb.create()
+        with self.app.app_context():
+            pbnh.db.init_db()
         self.test_client = self.app.test_client()
 
     def tearDown(self):
-        self.newdb.delete()
+        with self.app.app_context():
+            pbnh.db.undo_db()
 
     def test_home(self):
         response = self.test_client.get("/")

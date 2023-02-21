@@ -1,11 +1,11 @@
 import argparse
 import hashlib
 
-from flask import current_app
+from flask import current_app, g
 from sqlalchemy import create_engine
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
 from sqlalchemy.exc import DataError, IntegrityError
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, Session
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -39,19 +39,15 @@ class Paste(Base):
 
 
 class Paster:
-    def __init__(self, url):
-        """Grab connection information to pass to DBConnect"""
-        self._url = url
+    def __init__(self, engine=None):
+        self.engine = engine or get_engine()
 
     def __enter__(self):
-        self.engine = create_engine(self._url)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
+        self.session = Session(self.engine)
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.session.close()
-        self.engine.dispose()
 
     def create(self, data, ip=None, mime=None, sunset=None, timestamp=None):
         sha1 = hashlib.sha1(
@@ -124,19 +120,20 @@ class Paster:
         self.session.commit()
 
 
-class CreateDB:
-    def __init__(self, url):
-        self._url = url
-        self.engine = create_engine(str(self))
+def get_engine():
+    try:
+        return g.engine
+    except AttributeError:
+        g.engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
+        return g.engine
 
-    def __str__(self):
-        return str(self._url)
 
-    def create(self):
-        Base.metadata.create_all(self.engine)
+def init_db(engine=None):
+    Base.metadata.create_all(engine or get_engine())
 
-    def delete(self):
-        Paste.__table__.drop(self.engine)
+
+def undo_db(engine=None):
+    Paste.__table__.drop(engine or get_engine())
 
 
 def main():
@@ -148,8 +145,8 @@ def main():
         " (e.g. dialect+driver://username:password@host:port/database)",
     )
     args = parser.parse_args()
-    newdb = CreateDB(args.url)
-    print(newdb.create())
+    init_db(create_engine(args.url))
+    print("Database initialized!")
 
 
 if __name__ == "__main__":

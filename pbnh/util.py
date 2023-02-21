@@ -3,8 +3,6 @@ import magic
 import mimetypes
 import tempfile
 
-from flask import current_app
-
 from pbnh.db import Paster
 from datetime import datetime, timezone, timedelta
 
@@ -20,7 +18,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
         ):
             data = buf.read()
             mime = getMime(data=data, mimestr=mimestr)
-            with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
+            with Paster() as pstr:
                 j = pstr.create(data, mime=mime, ip=addr, sunset=sunset)
                 return j
     except IOError as e:
@@ -29,7 +27,7 @@ def fileData(files, addr=None, sunset=None, mimestr=None):
 
 
 def stringData(inputstr, addr=None, sunset=None, mime=None):
-    with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
+    with Paster() as pstr:
         j = pstr.create(inputstr.encode("utf-8"), mime=mime, ip=addr, sunset=sunset)
         return j
     return "String save error"
@@ -54,7 +52,7 @@ def getMime(data=None, mimestr=None):
 
 
 def getPaste(paste_id):
-    with Paster(current_app.config["SQLALCHEMY_DATABASE_URI"]) as pstr:
+    with Paster() as pstr:
         try:
             return pstr.query(hashid=paste_id)
         except ValueError:
