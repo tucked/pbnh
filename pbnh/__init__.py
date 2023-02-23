@@ -12,7 +12,9 @@ CONFIG_PATH_DEFAULT = "/etc/pbnh.yaml"
 CONFIG_PATH_ENV_VAR = "PBNH_CONFIG"
 
 
-def create_app(override_config: dict[str, Any] | None = None, /) -> Flask | None:
+def create_app(
+    override_config: dict[str, Any] | None = None, /, *, check_db: bool = False
+) -> Flask | None:
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
 
@@ -54,5 +56,17 @@ def create_app(override_config: dict[str, Any] | None = None, /) -> Flask | None
 
     app.register_blueprint(pbnh.cli.blueprint)
     app.register_blueprint(pbnh.views.blueprint)
+
+    # Ensure the DB is accessible.
+    if check_db:
+        import pbnh.db
+
+        with app.app_context():
+            try:
+                with pbnh.db.paster_context() as paster:
+                    paster.query(hashid="Has the database been initialized?")
+            except Exception as exc:
+                app.logger.error(exc)
+                return None
 
     return app

@@ -5,6 +5,16 @@ import pytest
 import pbnh
 
 
+def test_create_app_check_db(app):
+    """Passing check_db to create_app passes if the DB is initialized."""
+    assert pbnh.create_app(app.config, check_db=True)
+
+
+def test_create_app_check_db_fails(override_config):
+    """Passing check_db to create_app fails if the DB is not initialized."""
+    assert pbnh.create_app(override_config, check_db=True) is None
+
+
 def test_config_nondebug(override_config):
     """Setting DEBUG in config enables debug logging."""
     override_config["DEBUG"] = True
