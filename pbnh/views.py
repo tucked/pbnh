@@ -15,6 +15,7 @@ from flask import (
     request,
     Response,
 )
+import flask.typing
 import magic
 
 from pbnh import db
@@ -27,7 +28,7 @@ REDIRECT_MIME = "redirect"  # TODO should probably be "text/x.redirect"
 
 
 @blueprint.get("/")
-def index():
+def index() -> str:
     return render_template("index.html")
 
 
@@ -116,7 +117,7 @@ def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
 
 
 @blueprint.get("/<string:hashid>")
-def view_paste(hashid: str) -> Response | str:
+def view_paste(hashid: str) -> flask.typing.ResponseReturnValue | str:
     """Render according to the MIME type."""
     with db.paster_context() as paster:
         paste = paster.query(hashid=hashid) or abort(404)
@@ -133,7 +134,9 @@ def _guess_type(url: str) -> None | str:
 
 
 @blueprint.get("/<string:hashid>.<string:extension>")  # TODO GET /<hashid>.
-def view_paste_with_extension(hashid: str, extension: str) -> Response:
+def view_paste_with_extension(
+    hashid: str, extension: str
+) -> flask.typing.ResponseReturnValue:
     """Let the browser handle rendering."""
     if extension == "asciinema":
         # .asciinema is a legacy pbnh thing...
@@ -160,5 +163,5 @@ def view_paste_with_highlighting(hashid: str, extension: str) -> Response | str:
 
 
 @blueprint.errorhandler(404)
-def fourohfour(e=None):
+def fourohfour(error: Exception) -> tuple[str, int]:
     return render_template("404.html"), 404

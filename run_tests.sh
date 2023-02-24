@@ -5,6 +5,7 @@ pipenv install --deploy --dev
 pipenv check --ignore 51668  # https://github.com/sqlalchemy/sqlalchemy/pull/8563
 pipenv run black --check pbnh tests
 pipenv run flake8 pbnh tests
+pipenv run mypy --strict pbnh
 pipenv run bandit --recursive pbnh
 init_config="$(mktemp)"
 echo "[run]\ninclude = pbnh/__init__.py\n" > "$init_config"

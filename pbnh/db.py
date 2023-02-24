@@ -1,17 +1,20 @@
 import contextlib
+from datetime import datetime
 import hashlib
+from typing import Any, Iterator, Optional
 
 from flask import current_app, g
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import declarative_base, Session
-from sqlalchemy.sql import func
+from sqlalchemy.engine import Engine  # type: ignore
+from sqlalchemy.exc import IntegrityError  # type: ignore
+from sqlalchemy.orm import declarative_base, Session  # type: ignore
+from sqlalchemy.sql import func  # type: ignore
 
 _Base = declarative_base()
 
 
-class _Paste(_Base):
+class _Paste(_Base):  # type: ignore
     """Class to define the paste table
 
     paste
@@ -39,10 +42,17 @@ class _Paste(_Base):
 
 
 class _Paster:
-    def __init__(self, session, /):
+    def __init__(self, session: Session, /) -> None:
         self._session = session
 
-    def create(self, data, ip=None, mime=None, sunset=None, timestamp=None):
+    def create(
+        self,
+        data: bytes,
+        ip: Optional[str] = None,
+        mime: Optional[str] = None,
+        sunset: Optional[datetime] = None,
+        timestamp: Optional[datetime] = None,
+    ) -> dict[str, str]:
         hashid = hashlib.sha1(
             data,
             # If a user has the hash, we will give them the content,
@@ -66,11 +76,13 @@ class _Paster:
         #      paste.id is no longer public.
         return {
             key: value
-            for key, value in self.query(hashid=hashid).items()
+            for key, value in (self.query(hashid=hashid) or {}).items()
             if key in {"id", "hashid"}
         }
 
-    def _query(self, *, id=None, hashid=None):
+    def _query(
+        self, *, id: Optional[int] = None, hashid: Optional[str] = None
+    ) -> Optional[_Paste]:
         if hashid is not None:
             if id is not None:
                 raise ValueError("id and hashid are mutually exclusive.")
@@ -80,9 +92,11 @@ class _Paster:
         else:
             return None
         # Beware: This autobegins a transaction!
-        return self._session.query(_Paste).filter(filter_).first()
+        return self._session.query(_Paste).filter(filter_).first()  # type: ignore
 
-    def query(self, *, id=None, hashid=None):
+    def query(
+        self, *, id: Optional[int] = None, hashid: Optional[str] = None
+    ) -> Optional[dict[str, Any]]:
         with self._session.begin():
             result = self._query(id=id, hashid=hashid)
             if result:
@@ -97,14 +111,14 @@ class _Paster:
                 }
         return None
 
-    def delete(self, *, id=None, hashid=None):
+    def delete(self, *, id: Optional[int] = None, hashid: Optional[str] = None) -> None:
         with self._session.begin():
             result = self._query(id=id, hashid=hashid)
             if result:
                 self._session.delete(result)
 
 
-def _get_engine():
+def _get_engine() -> Engine:
     try:
         return g.engine
     except AttributeError:
@@ -113,14 +127,14 @@ def _get_engine():
 
 
 @contextlib.contextmanager
-def paster_context():
+def paster_context() -> Iterator[_Paster]:
     with Session(_get_engine()) as session:
         yield _Paster(session)
 
 
-def init_db():
+def init_db() -> None:
     _Base.metadata.create_all(_get_engine())
 
 
-def undo_db():
+def undo_db() -> None:
     _Paste.__table__.drop(_get_engine())
