@@ -4,6 +4,7 @@ import hashlib
 from typing import Any, Iterator, Optional
 
 from flask import current_app, g
+import magic
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
 from sqlalchemy.engine import Engine  # type: ignore
@@ -62,7 +63,7 @@ class _Paster:
         paste = _Paste(
             hashid=hashid,
             ip=ip,
-            mime=mime,
+            mime=mime or magic.from_buffer(data, mime=True),
             sunset=sunset,
             timestamp=timestamp,
             data=data,

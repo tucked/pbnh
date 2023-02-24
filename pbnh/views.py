@@ -16,7 +16,6 @@ from flask import (
     Response,
 )
 import flask.typing
-import magic
 
 from pbnh import db
 
@@ -68,7 +67,7 @@ def create_paste() -> tuple[dict[str, str], int]:
     with db.paster_context() as paster:
         paste = paster.create(
             data,
-            mime=mime or magic.from_buffer(data, mime=True),
+            mime=mime,
             # If the request was forwarded from a reverse proxy (e.g. nginx)
             # request.remote_addr is the proxy, not the client:
             ip=request.headers.get("X-Forwarded-For", request.remote_addr),
