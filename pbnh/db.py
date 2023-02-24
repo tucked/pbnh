@@ -35,7 +35,7 @@ class _Paste(_Base):  # type: ignore
     hashid = Column(String, nullable=False)
     ip = Column(String)
     timestamp = Column(DateTime, default=func.now())
-    mime = Column(String, default="text/plain")
+    mime = Column(String, default="application/octet-stream")
     sunset = Column(DateTime)
     data = Column(LargeBinary)
 
