@@ -5,6 +5,31 @@ import pytest
 import pbnh.db
 
 
+def test_db_config_missing(app, monkeypatch):
+    key = "SQLALCHEMY_DATABASE_URI"
+    monkeypatch.delitem(app.config, key)
+    with app.app_context():
+        with pytest.raises(pbnh.db.PasteDBError, match=f"{key}.*not set"):
+            with pbnh.db.paster_context():
+                pass
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "1*3451g/1*3/643h3i(&*^%$446",  # sqlalchemy.exc.ArgumentError
+        "dialect+driver://username:password@host:port/database",  # ValueError (on port)
+    ],
+)
+def test_db_config_unusable(app, value, monkeypatch):
+    key = "SQLALCHEMY_DATABASE_URI"
+    monkeypatch.setitem(app.config, key, value)
+    with app.app_context():
+        with pytest.raises(pbnh.db.PasteDBError, match=f"{key}.*unusable"):
+            with pbnh.db.paster_context():
+                pass
+
+
 @pytest.fixture
 def paster(app):
     with app.app_context():

@@ -5,10 +5,10 @@ from typing import Any, Iterator, Optional
 
 from flask import current_app, g
 import magic
-from sqlalchemy import create_engine  # type: ignore
+import sqlalchemy.exc  # type: ignore
+from sqlalchemy import create_engine
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
 from sqlalchemy.engine import Engine  # type: ignore
-from sqlalchemy.exc import IntegrityError  # type: ignore
 from sqlalchemy.orm import declarative_base, Session  # type: ignore
 from sqlalchemy.sql import func  # type: ignore
 
@@ -79,7 +79,8 @@ class _Paster:
         try:
             with self._session.begin():
                 self._session.add(paste)
-        except IntegrityError as exc:  # A paste with that hashid already exists.
+        except sqlalchemy.exc.IntegrityError as exc:
+            # A paste with that hashid already exists.
             query = self.query(hashid=hashid) or {}
             if query["data"] != data:
                 raise HashCollision(hashid) from exc
@@ -115,7 +116,13 @@ def _get_engine() -> Engine:
     try:
         return g.engine
     except AttributeError:
-        g.engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
+        key = "SQLALCHEMY_DATABASE_URI"
+        try:
+            g.engine = create_engine(current_app.config[key])
+        except KeyError as exc:
+            raise PasteDBError(f"{key} is not set in the config.") from exc
+        except (ValueError, sqlalchemy.exc.ArgumentError) as exc:
+            raise PasteDBError(f"Config key {key} is malformed or unusable.") from exc
         return g.engine
 
 
