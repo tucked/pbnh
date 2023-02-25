@@ -10,22 +10,25 @@ import yaml
 
 CONFIG_PATH_DEFAULT = "/etc/pbnh.yaml"
 CONFIG_PATH_ENV_VAR = "PBNH_CONFIG"
-logger = logging.getLogger(__name__)
 
 
-def create_app(
-    override_config: dict[str, Any] | None = None, /, *, log_level: int = logging.DEBUG
-) -> Flask:
+def create_app(override_config: dict[str, Any] | None = None, /) -> Flask | None:
     """Create and configure an instance of the Flask application."""
-    logging.basicConfig(level=log_level)
     app = Flask(__name__, instance_relative_config=True)
+
+    # Configure logging.
+    gunicorn_logger = logging.getLogger("gunicorn.error")
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
 
     # Get the path to the config file.
     try:
         config_path = os.environ[CONFIG_PATH_ENV_VAR]
     except KeyError as exc:
         config_path = CONFIG_PATH_DEFAULT
-        logger.info(f"{exc} is not set. Trying {config_path}...")
+        app.logger.info(
+            f"{exc.args[0]} is not set in the environment. Trying {config_path}..."
+        )
 
     # Load the config file.
     try:
@@ -33,15 +36,17 @@ def create_app(
     except FileNotFoundError as exc:
         # Config can be provided via override_config,
         # so warn instead of failing:
-        logger.warning(exc)
+        app.logger.warning(exc)
     except (ValueError, yaml.parser.ParserError):
-        logger.exception(f"{config_path} is malformed!")
+        app.logger.error(f"{config_path} is malformed.")
         raise
     else:
-        logger.info(f"loaded {config_path} successfully")
+        app.logger.info(f"{config_path} was loaded successfully.")
 
     # Apply config overrides.
     app.config.update(override_config or {})
+    if app.debug:
+        app.logger.setLevel(logging.DEBUG)
 
     # Register blueprints.
     import pbnh.cli

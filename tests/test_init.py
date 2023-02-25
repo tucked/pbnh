@@ -1,6 +1,16 @@
+import logging
+
 import pytest
 
 import pbnh
+
+
+def test_config_nondebug(override_config):
+    """Setting DEBUG in config enables debug logging."""
+    override_config["DEBUG"] = True
+    pbnh.create_app(override_config).logger.level == logging.DEBUG
+    override_config["DEBUG"] = False
+    pbnh.create_app(override_config).logger.level != logging.DEBUG
 
 
 def test_config_path_env_var(tmp_path, monkeypatch, override_config):
