@@ -52,12 +52,11 @@ def test_config_missing_default(monkeypatch, override_config, caplog):
     ],
 )
 def test_config_malformed(tmp_path, text, monkeypatch, override_config, caplog):
-    """Ensure that a malformed config file causes an exception to be raised."""
+    """Ensure that a malformed config file prevents app creation."""
     path = tmp_path / "pbnh.yaml"
     path.write_text(text)
     monkeypatch.setenv(pbnh.CONFIG_PATH_ENV_VAR, str(path))
-    with pytest.raises(Exception):
-        pbnh.create_app(override_config)
+    assert pbnh.create_app(override_config) is None
     assert any(
         str(path) in record.message
         and "malformed" in record.message

@@ -39,7 +39,7 @@ def create_app(override_config: dict[str, Any] | None = None, /) -> Flask | None
         app.logger.warning(exc)
     except (ValueError, yaml.parser.ParserError):
         app.logger.error(f"{config_path} is malformed.")
-        raise
+        return None
     else:
         app.logger.info(f"{config_path} was loaded successfully.")
 
