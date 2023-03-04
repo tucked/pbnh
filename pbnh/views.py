@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta, timezone
 import io
 import json
+import mimetypes
 import os.path
 
 from docutils.core import publish_parts
@@ -14,9 +16,18 @@ from flask import (
     send_file,
     send_from_directory,
 )
+import magic
 from werkzeug.datastructures import FileStorage
 
-from pbnh import util
+from pbnh import db
+
+
+def getMime(data=None, mimestr=None):
+    if mimestr:
+        return mimetypes.guess_type("file.{0}".format(mimestr))[0]
+    elif data:
+        return magic.from_buffer(data, mime=True)
+    return "text/plain"
 
 
 blueprint = Blueprint("views", __name__)
@@ -45,12 +56,24 @@ def post_paste():
         addr = request.headers.getlist("X-Forwarded-For")[0]
     else:
         addr = request.remote_addr
-    sunsetstr = request.form.get("sunset")
+
+    # Calculate the expiration.
+    try:
+        sunset = (request.date or datetime.now(timezone.utc)) + timedelta(
+            seconds=int(request.form["sunset"])
+        )
+    except KeyError:
+        sunset = None
+    except ValueError:
+        abort(400)
+
     mimestr = request.form.get("mime")
-    sunset = util.getSunsetFromStr(sunsetstr)
     redirectstr = request.form.get("r") or request.form.get("redirect")
     if redirectstr:
-        j = util.stringData(redirectstr, addr=addr, sunset=sunset, mime="redirect")
+        with db.paster_context() as pstr:
+            j = pstr.create(
+                redirectstr.encode("utf-8"), mime="redirect", ip=addr, sunset=sunset
+            )
         if j:
             if isinstance(j, str):
                 return j
@@ -59,14 +82,20 @@ def post_paste():
     inputstr = request.form.get("content") or request.form.get("c")
     # we got string data
     if inputstr and isinstance(inputstr, str):
-        j = util.stringData(inputstr, addr=addr, sunset=sunset, mime=mimestr)
+        with db.paster_context() as pstr:
+            j = pstr.create(
+                inputstr.encode("utf-8"), mime=mimestr, ip=addr, sunset=sunset
+            )
         if j:
             j["link"] = request.url + str(j.get("hashid"))
         return json.dumps(j), 201
     files = request.files.get("content") or request.files.get("c")
     # we got file data
     if files and isinstance(files, FileStorage):
-        j = util.fileData(files, addr=addr, sunset=sunset, mimestr=mimestr)
+        data = files.stream.read()
+        mime = getMime(data=data, mimestr=mimestr)
+        with db.paster_context() as pstr:
+            j = pstr.create(data, mime=mime, ip=addr, sunset=sunset)
         if j:
             if isinstance(j, str):
                 return j
@@ -82,9 +111,11 @@ def view_paste(paste_id):
     is text attempt to highlight it. If not return the data and set the
     mimetype so the browser can attempt to render it.
     """
-    query = util.getPaste(paste_id)
-    if not query:
-        abort(404)
+    with db.paster_context() as pstr:
+        try:
+            query = pstr.query(hashid=paste_id) or abort(404)
+        except ValueError:
+            abort(404)
     mime = query.get("mime")
     data = query.get("data")
     if mime == "redirect":
@@ -98,9 +129,11 @@ def view_paste(paste_id):
 
 @blueprint.route("/<string:paste_id>.<string:filetype>")
 def view_paste_with_extension(paste_id, filetype):
-    query = util.getPaste(paste_id)
-    if not query:
-        abort(404)
+    with db.paster_context() as pstr:
+        try:
+            query = pstr.query(hashid=paste_id)
+        except ValueError:
+            abort(404)
     if filetype == "md":
         data = query.get("data").decode("utf-8")
         return render_template("markdown.html", paste=data)
@@ -122,7 +155,7 @@ def view_paste_with_extension(paste_id, filetype):
             params=params,
         )
     data = io.BytesIO(query.get("data"))
-    mime = util.getMime(mimestr=filetype)
+    mime = getMime(mimestr=filetype)
     return Response(data, mimetype=mime)
 
 
@@ -130,9 +163,11 @@ def view_paste_with_extension(paste_id, filetype):
 def view_paste_with_highlighting(paste_id, filetype):
     if not filetype:
         filetype = "txt"
-    query = util.getPaste(paste_id)
-    if not query:
-        abort(404)
+    with db.paster_context() as pstr:
+        try:
+            query = pstr.query(hashid=paste_id)
+        except ValueError:
+            abort(404)
     return render_template(
         "paste.html", paste=query["data"].decode("utf-8"), mime=filetype
     )
