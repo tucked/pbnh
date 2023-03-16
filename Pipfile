@@ -1,0 +1,29 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+click = {version = ">=8.1"}
+docutils = {version = ">=0.18"}
+flask = {version = ">=2.0"}
+gunicorn = {version = ">=20.1"}
+psycopg2 = {version = ">=2.9"}
+python-magic = {version = ">=0.4"}
+pyyaml = {version = ">=6.0"}
+sqlalchemy = {version = "~=1.4"}
+
+[dev-packages]
+bandit = {version = ">=1.7"}
+black = {version = ">=22.10"}
+flake8 = {version = ">=6.0"}
+flake8-pyproject = {version = ">=1.2"}
+mypy = {version = ">=0.990"}
+pytest = {version = ">=7.2"}
+pytest-cov = {version = ">=4.0"}
+pytest-randomly = {version = ">=3.12"}
+types-docutils = {version = ">=0.18"}
+types-pyyaml = {version = ">=6.0"}
+
+[requires]
+python_version = "3.11"
