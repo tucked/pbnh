@@ -84,6 +84,15 @@ def create_app(
         app.logger.warning("Legacy config detected")
         app.config["SQLALCHEMY_DATABASE_URI"] = _uri_from_legacy(app.config["database"])
 
+    # Tell Flask it is behind a reverse proxy.
+    if "WERKZEUG_PROXY_FIX" in app.config:
+        # https://flask.palletsprojects.com/en/2.2.x/deploying/proxy_fix/
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(  # type: ignore
+            app.wsgi_app, **app.config["WERKZEUG_PROXY_FIX"]
+        )
+
     # Register blueprints.
     import pbnh.cli
     import pbnh.views

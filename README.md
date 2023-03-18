@@ -50,6 +50,12 @@ Failed to find application object: 'create_app(check_db=True)'
 [2023-02-28 07:07:03 +0000] [1] [INFO] Reason: App failed to load.
 ```
 
+#### WSGI
+
+Gunicorn serves the project, and configuration for it can be bind-mounted to `/pbnh/gunicorn.conf.py`.
+
+See https://docs.gunicorn.org/en/stable/configure.html#configuration-file for more information.
+
 ### Initialization
 
 For the sake of demonstration, this guide will set up an SQLite database.
