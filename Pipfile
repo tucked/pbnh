@@ -12,6 +12,7 @@ psycopg2 = {version = ">=2.9"}
 python-magic = {version = ">=0.4"}
 pyyaml = {version = ">=6.0"}
 sqlalchemy = {version = "~=1.4"}
+werkzeug = {version = ">=2.2"}
 
 [dev-packages]
 bandit = {version = ">=1.7"}

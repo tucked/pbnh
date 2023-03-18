@@ -1,4 +1,6 @@
+import json
 import logging
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -96,3 +98,17 @@ def test_config_malformed(tmp_path, text, monkeypatch, override_config, caplog):
         and record.levelname == "ERROR"
         for record in caplog.records
     )
+
+
+def test_proxy_fix(app):
+    """Setting x_proto in WERKZEUG_PROXY_FIX affects the returned link."""
+
+    def _proto_forwarded_link_scheme(app):
+        response = app.test_client().post(
+            "/", data={"content": "abc"}, headers={"X-Forwarded-Proto": "https"}
+        )
+        return urlsplit(json.loads(response.data.decode("utf-8"))["link"]).scheme
+
+    assert _proto_forwarded_link_scheme(app) == "http"
+    app.config["WERKZEUG_PROXY_FIX"] = {"x_proto": 1}
+    assert _proto_forwarded_link_scheme(pbnh.create_app(app.config)) == "https"
