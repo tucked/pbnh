@@ -7,7 +7,7 @@ from typing import Any
 from flask import Flask
 
 # Deprecated (only db.py should know about sqlalchemy):
-from sqlalchemy.engine import URL  # type: ignore
+from sqlalchemy.engine import URL
 import yaml
 
 

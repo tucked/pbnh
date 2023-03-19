@@ -36,8 +36,10 @@ edit sample_config.yml
 ```
 
 Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
-Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/14/dialects/index.html) should work;
+Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/20/dialects/index.html) should work;
 however, only SQLite and PostgreSQL are currently tested.
+
+Note: In-memory databases are NOT supported.
 
 If the server is not configured correctly, it will produce an error like this:
 
@@ -54,7 +56,7 @@ Failed to find application object: 'create_app(check_db=True)'
 
 Gunicorn serves the project, and configuration for it can be bind-mounted to `/pbnh/gunicorn.conf.py`.
 
-See https://docs.gunicorn.org/en/stable/configure.html#configuration-file for more information.
+See https://docs.gunicorn.org/en/20.1.0/configure.html#configuration-file for more information.
 
 ### Initialization
 

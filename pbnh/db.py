@@ -5,17 +5,19 @@ from typing import Any, Iterator, Optional
 
 from flask import current_app, g
 import magic
-import sqlalchemy.exc  # type: ignore
+import sqlalchemy.exc
 from sqlalchemy import create_engine
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
-from sqlalchemy.engine import Engine  # type: ignore
-from sqlalchemy.orm import declarative_base, Session  # type: ignore
-from sqlalchemy.sql import func  # type: ignore
-
-_Base = declarative_base()
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.sql import func
 
 
-class _Paste(_Base):  # type: ignore
+class _Base(DeclarativeBase):
+    pass
+
+
+class _Paste(_Base):
     """Class to define the paste table
 
     paste
@@ -89,7 +91,7 @@ class _Paster:
     def _query(self, *, hashid: str) -> _Paste | None:
         # Beware: This autobegins a transaction!
         filter_ = _Paste.hashid == hashid
-        return self._session.query(_Paste).filter(filter_).first()  # type: ignore
+        return self._session.query(_Paste).filter(filter_).first()
 
     def query(self, *, hashid: str) -> dict[str, Any] | None:
         with self._session.begin():
@@ -114,7 +116,8 @@ class _Paster:
 
 def _get_engine() -> Engine:
     try:
-        return g.engine
+        # If g.engine is already set, assume it is valid:
+        return g.engine  # type: ignore
     except AttributeError:
         key = "SQLALCHEMY_DATABASE_URI"
         try:
@@ -137,4 +140,4 @@ def init_db() -> None:
 
 
 def undo_db() -> None:
-    _Paste.__table__.drop(_get_engine())
+    _Base.metadata.drop_all(_get_engine())
