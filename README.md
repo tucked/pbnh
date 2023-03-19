@@ -56,7 +56,7 @@ Failed to find application object: 'create_app(check_db=True)'
 
 Gunicorn serves the project, and configuration for it can be bind-mounted to `/pbnh/gunicorn.conf.py`.
 
-See https://docs.gunicorn.org/en/stable/configure.html#configuration-file for more information.
+See https://docs.gunicorn.org/en/20.1.0/configure.html#configuration-file for more information.
 
 ### Initialization
 
