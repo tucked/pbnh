@@ -36,7 +36,7 @@ edit sample_config.yml
 ```
 
 Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
-Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/14/dialects/index.html) should work;
+Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/20/dialects/index.html) should work;
 however, only SQLite and PostgreSQL are currently tested.
 
 Note: In-memory databases are NOT supported.
