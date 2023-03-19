@@ -39,6 +39,8 @@ Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
 Any [dialect supported by SQLAlchemy](https://docs.sqlalchemy.org/en/14/dialects/index.html) should work;
 however, only SQLite and PostgreSQL are currently tested.
 
+Note: In-memory databases are NOT supported.
+
 If the server is not configured correctly, it will produce an error like this:
 
 ```
