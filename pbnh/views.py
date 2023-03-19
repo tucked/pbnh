@@ -66,12 +66,7 @@ def create_paste() -> tuple[dict[str, str], int]:
     try:
         with db.paster_context() as paster:
             hashid = paster.create(
-                data,
-                mime=mime,
-                # If the request was forwarded from a reverse proxy (e.g. nginx)
-                # request.remote_addr is the proxy, not the client:
-                ip=request.headers.get("X-Forwarded-For", request.remote_addr),
-                sunset=sunset,
+                data, mime=mime, ip=request.remote_addr, sunset=sunset
             )
     except db.HashCollision as exc:
         hashid = str(exc)
