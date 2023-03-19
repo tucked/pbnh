@@ -1,8 +1,12 @@
+import contextlib
 import hashlib
 from io import BytesIO
 import json
 
 import pytest
+
+import pbnh
+from pbnh import views
 
 
 @pytest.fixture(params=["content", "c"])
@@ -61,6 +65,34 @@ def test_paste_string_content(content_key, mime, test_client):
     assert hashid == "a9993e364706816aba3e25717850c26c9cd0d89d"
     response = test_client.get(f"/{hashid}")
     assert response.status_code == 200
+
+
+def test_paste_spoofed_x_for(app, monkeypatch):
+    class DummyPaster:
+        def create(self, *_, **kwargs):
+            # Return the sender IP instead of the hashid
+            # (so we can see it in the response).
+            return kwargs["ip"]
+
+    class DummyDB:
+        @contextlib.contextmanager
+        def paster_context(self, *_, **__):
+            yield DummyPaster()
+
+    monkeypatch.setattr(views, "db", DummyDB())
+    spoofed_for = "8.8.8.8"
+
+    def _returned_hashid(app):
+        response = app.test_client().post(
+            "/",
+            data={"content": "does not matter"},
+            headers={"X-Forwarded-For": spoofed_for},
+        )
+        return json.loads(response.data.decode("utf-8"))["hashid"]
+
+    for x_for, hashid in {0: "127.0.0.1", 1: spoofed_for}.items():
+        app.config["WERKZEUG_PROXY_FIX"] = {"x_for": x_for}
+        assert _returned_hashid(pbnh.create_app(app.config)) == hashid, x_for
 
 
 def test_paste_empty(test_client):

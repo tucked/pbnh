@@ -109,6 +109,8 @@ def test_proxy_fix(app):
         )
         return urlsplit(json.loads(response.data.decode("utf-8"))["link"]).scheme
 
-    assert _proto_forwarded_link_scheme(app) == "http"
-    app.config["WERKZEUG_PROXY_FIX"] = {"x_proto": 1}
-    assert _proto_forwarded_link_scheme(pbnh.create_app(app.config)) == "https"
+    for x_proto, scheme in {0: "http", 1: "https"}.items():
+        app.config["WERKZEUG_PROXY_FIX"] = {"x_proto": x_proto}
+        assert (
+            _proto_forwarded_link_scheme(pbnh.create_app(app.config)) == scheme
+        ), x_proto
