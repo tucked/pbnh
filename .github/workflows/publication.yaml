@@ -15,3 +15,9 @@ jobs:
       with:
         push: true
         tags: tucked/pbnh:latest
+    - uses: peter-evans/dockerhub-description@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        repository: tucked/pbnh
+        short-description: ${{ github.event.repository.description }}
