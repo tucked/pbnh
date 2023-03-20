@@ -2,12 +2,15 @@
     <head>
         <title>pbnh</title>
         <script src="/static/marked.min.js"></script>
+        <script src="/static/purify.min.js"></script>
     </head>
     <body>
         <div id="content"></div>
-        <div id="paste" style="display: none;">{{paste}}</div>
         <script>
-document.getElementById('content').innerHTML = marked(paste.innerHTML);
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", "{{url}}", false);
+            xmlhttp.send();
+            document.getElementById("content").innerHTML = DOMPurify.sanitize(marked.parse(xmlhttp.responseText));
         </script>
     </body>
 </html>

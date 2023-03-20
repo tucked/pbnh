@@ -85,7 +85,7 @@ Currently, the following types can be rendered:
 
 - [Asciicasts](https://asciinema.org/) (`application/x-asciicast`): `GET /<hashid>/cast`
 
-- [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`):`GET /<hashid>/md`
+- [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`): `GET /<hashid>/md`
 
 - [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`): `GET /<hashid>/rst`
 
