@@ -3,18 +3,31 @@ on:
   push:
     branches:
     - main
+    tags:
+    - 'v*'
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+    - uses: docker/metadata-action@v4
+      id: meta
+      with:
+        images: tucked/pbnh
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
     - uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
     - uses: docker/build-push-action@v4
       with:
+        context: .
         push: true
-        tags: tucked/pbnh:latest
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
     - uses: peter-evans/dockerhub-description@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
