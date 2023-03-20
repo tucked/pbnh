@@ -1,8 +1,8 @@
 <html>
     <head>
         <title>pbnh</title>
-        <script src="/static/marked.min.js"></script>
-        <script src="/static/purify.min.js"></script>
+        <script src="{{ url_for('static', filename='marked.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='purify.min.js') }}"></script>
     </head>
     <body>
         <div id="content"></div>
