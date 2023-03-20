@@ -55,7 +55,7 @@
     <textarea id="paste" name="content">{{paste}}</textarea>
 
     <script>
-        CodeMirror.modeURL = "{{ url_for('static', filename='codemirror/langs/%N.js') }}";
+        CodeMirror.modeURL = "{{ url_for('static', filename='codemirror/langs') }}/%N.js";
         var editor = CodeMirror.fromTextArea(paste, {
             lineNumbers: true,
             theme: 'monokai',
