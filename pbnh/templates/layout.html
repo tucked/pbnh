@@ -1,13 +1,13 @@
 <html>
     <title>pbnh</title>
-    <link rel="stylesheet" href="/static/codemirror/codemirror.css">
-    <link rel="stylesheet" href="/static/codemirror/fullscreen.css">
-    <link rel="stylesheet" href="/static/codemirror/monokai.css">
-    <link rel="stylesheet" href="/static/font-awesome.min.css">
-    <script src="/static/codemirror/codemirror.js"></script>
-    <script src="/static/codemirror/fullscreen.js"></script>
-    <script src="/static/codemirror/meta.js"></script>
-    <script src="/static/codemirror/loadmode.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/codemirror.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/fullscreen.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/monokai.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='font-awesome.min.css') }}">
+    <script src="{{ url_for('static', filename='codemirror/codemirror.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/fullscreen.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/meta.js') }}"></script>
+    <script src="{{ url_for('static', filename='codemirror/loadmode.js') }}"></script>
 
     <div title="Ctrl-N" id="newicon" style="
        color: #fff;
@@ -55,7 +55,7 @@
     <textarea id="paste" name="content">{{paste}}</textarea>
 
     <script>
-        CodeMirror.modeURL = "/static/codemirror/langs/%N.js";
+        CodeMirror.modeURL = "{{ url_for('static', filename='codemirror/langs/%N.js') }}";
         var editor = CodeMirror.fromTextArea(paste, {
             lineNumbers: true,
             theme: 'monokai',
