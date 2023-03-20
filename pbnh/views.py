@@ -80,8 +80,9 @@ def create_paste() -> tuple[dict[str, str], int]:
 
 @blueprint.get("/about")
 def about() -> str:
-    with open(Path(current_app.static_folder or "static") / "about.md") as about_f:
-        return render_template("markdown.html", paste=about_f.read())
+    return render_template(
+        "markdown.html", url=f"{current_app.static_url_path}/about.md"
+    )
 
 
 def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
@@ -91,7 +92,7 @@ def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
         except UnicodeDecodeError as exc:
             abort(422, f"The paste cannot be decoded as text ({exc}).")
         if mime == "text/markdown":
-            return render_template("markdown.html", paste=text)
+            return render_template("markdown.html", url=f"/{paste['hashid']}.md")
         if mime in {"text/x-rst", "text/prs.fallenstein.rst"}:
             # https://github.com/python/cpython/issues/101137
             return Response(publish_parts(text, writer_name="html")["html_body"])
