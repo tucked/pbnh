@@ -108,7 +108,7 @@ def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
                 params[key] = str(value)
         return render_template(
             "asciinema.html",
-            pasteid=paste["hashid"],
+            url=f"/{paste['hashid']}.cast",
             params=params,
         )
     return Response(io.BytesIO(paste["data"]), mimetype=mime)
