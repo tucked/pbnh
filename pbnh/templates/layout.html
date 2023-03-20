@@ -75,7 +75,7 @@
         });
         var info = CodeMirror.findModeByMIME('{{mime}}');
         if (!info) {
-            info = CodeMirror.findModeByExtension('{{mime}}');
+            info = CodeMirror.findModeByExtension('{{extension}}');
         }
         if (info) {
             editor.setOption('mode', info.mime);

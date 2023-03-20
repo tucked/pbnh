@@ -96,7 +96,12 @@ def _rendered(paste: dict[str, Any], mime: str) -> Response | str:
         if mime in {"text/x-rst", "text/prs.fallenstein.rst"}:
             # https://github.com/python/cpython/issues/101137
             return Response(publish_parts(text, writer_name="html")["html_body"])
-        return render_template("paste.html", paste=text, mime=mime)
+        return render_template(
+            "paste.html",
+            paste=text,
+            mime=mime,
+            extension=(mimetypes.guess_extension(mime, strict=False) or "")[1:] or mime,
+        )
     if mime in {"application/asciicast+json", "application/x-asciicast"}:
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
