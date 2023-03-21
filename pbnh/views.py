@@ -272,7 +272,7 @@ def view_paste(
             # .asciinema is a legacy pbnh thing...
             # asciinema used to use .json (application/asciicast+json),
             # and now it uses .cast (application/x-asciicast).
-            return redirect(f"/{hashid}/cast", 301)
+            return redirect(request.url.replace(".asciinema", "/cast"), 301)
         return _render_raw(hashid=hashid, extension=extension)
     paste = _get_paste(hashid)
     renderer = _renderer_for_mode(_mode_for_mime(paste["mime"]))

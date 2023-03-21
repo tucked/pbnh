@@ -241,13 +241,24 @@ def test_paste_sunset_immediately(content_key, test_client):
     assert response.status_code == 400
 
 
-@pytest.mark.parametrize("ext", ["asciinema", "md", "rst", "txt"])
+@pytest.mark.parametrize("ext", ["cast", "md", "rst", "txt"])
 def test_get_ext(content_key, test_client, ext):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(f"/{hashid}.{ext}")
-    assert response.status_code == 301 if ext == "asciinema" else 200
+    assert response.status_code == 200
+
+
+def test_get_asciinema(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    query_string = "theme=solarized"
+    response = test_client.get(f"/{hashid}.asciinema?{query_string}")
+    assert response.status_code == 301
+    assert ".asciinema" not in response.location
+    assert query_string in response.location
 
 
 @pytest.mark.parametrize("suffix", ["", ".cast"])
