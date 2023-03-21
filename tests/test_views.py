@@ -107,14 +107,25 @@ def test_redirect(redirect_key, test_client):
     assert j.get("hashid") == "738ddf35b3a85a7a6ba7b232bd3d5f1e4d284ad1"
 
 
-def test_follow_redirect(redirect_key, test_client):
+@pytest.mark.parametrize("mode", ["", "/redirect"])
+def test_follow_redirect(redirect_key, test_client, mode):
     url = "localhost:12345"
     hashid = hashlib.sha1(url.encode("utf-8"), usedforsecurity=False).hexdigest()
     response = test_client.post("/", data={redirect_key: url})
     j = json.loads(response.data.decode("utf-8"))
     assert j.get("hashid") == hashid
-    response = test_client.get(f"/{hashid}")
+    response = test_client.get(f"/{hashid}{mode}")
     assert response.status_code == 302
+
+
+def test_redirect_with_extension(redirect_key, test_client):
+    url = "localhost:12345"
+    hashid = hashlib.sha1(url.encode("utf-8"), usedforsecurity=False).hexdigest()
+    response = test_client.post("/", data={redirect_key: url})
+    j = json.loads(response.data.decode("utf-8"))
+    assert j.get("hashid") == hashid
+    response = test_client.get(f"/{hashid}.foo/redirect")
+    assert response.status_code == 400
 
 
 def test_paste_file_content(content_key, test_client):
@@ -122,6 +133,65 @@ def test_paste_file_content(content_key, test_client):
     assert response.status_code == 201
     j = json.loads(response.data.decode("utf-8"))
     assert j.get("hashid") == "4a756ca07e9487f482465a99e8286abc86ba4dc7"
+
+
+@pytest.mark.parametrize("mode", ["", "/md"])
+@pytest.mark.parametrize("suffix", ["", ".md"])
+def test_markdown(content_key, test_client, mode, suffix):
+    response = test_client.post("/", data={content_key: "abc", "mime": "text/markdown"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}{suffix}{mode}")
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("mode", ["", "/rst"])
+def test_restructuredtext(content_key, test_client, mode):
+    response = test_client.post("/", data={content_key: "abc", "mime": "text/x-rst"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}{mode}")
+    assert response.status_code == 200
+
+
+def test_restructuredtext_with_extension(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc", "mime": "text/x-rst"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}.foo/rst")
+    assert response.status_code == 400
+
+
+def test_bad_mode(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}/foo")
+    assert response.status_code == 400
+
+
+def test_no_mode_redirect(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}.txt/")
+    assert response.status_code == 301
+
+
+def test_raw_mode_redirect(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}./txt")
+    assert response.status_code == 301
+
+
+def test_text_mode_guess_type(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}.md/text")
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize("ext", ["md", "rst", "txt"])
@@ -180,12 +250,16 @@ def test_get_ext(content_key, test_client, ext):
     assert response.status_code == 301 if ext == "asciinema" else 200
 
 
-def test_get_asciinema_params(content_key, test_client):
-    response = test_client.post("/", data={content_key: "abc"})
+@pytest.mark.parametrize("suffix", ["", ".cast"])
+@pytest.mark.parametrize("mode", ["", "/cast"])
+def test_get_asciinema_params(content_key, test_client, suffix, mode):
+    response = test_client.post(
+        "/", data={content_key: "abc", "mime": "application/x-asciicast"}
+    )
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(
-        f"/{hashid}/cast",
+        f"/{hashid}{suffix}{mode}",
         query_string={
             "speed": 10,
             "theme": "solarized-light",
