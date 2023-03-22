@@ -79,9 +79,9 @@ Append a `.` with no extension (i.e. `GET /<hashid>.`) to use the type associate
 
 If only the paste ID is requested (i.e. `GET /<hashid>` or `GET /<hashid>/`),
 the paste will be rendered for a Web browser according to the paste's associated MIME type.
-The associated MIME type can be overridden by appending `/<extension>` to the URI.
+A rendering mode can be explicitly selected by appending `/<mode>` to the URI.
 
-Currently, the following types can be rendered:
+Currently, the following rendering modes are supported:
 
 - [Asciicasts](https://asciinema.org/) (`application/x-asciicast`): `GET /<hashid>/cast`
 
@@ -89,4 +89,4 @@ Currently, the following types can be rendered:
 
 - [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`): `GET /<hashid>/rst`
 
-Additionally, syntax highlighting is supported for many other text types.
+Additionally, syntax highlighting is supported for many other text types: `GET /<hashid>/text`
