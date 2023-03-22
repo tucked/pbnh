@@ -131,3 +131,5 @@ docker compose -f docker-compose.test.yml run sut
 ```
 
 Note: This pattern is meant to be compatible with [automated repository testing on Docker Hub](https://docs.docker.com/docker-hub/builds/automated-testing/).
+
+Alternatively, use the `bin/test.sh` script (which has the additional benefit of cleaning up after successful runs).
