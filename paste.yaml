@@ -1,0 +1,3 @@
+SQLALCHEMY_DATABASE_URI: sqlite:////pbnh/tmpdb.sqlite
+DEBUG: True
+TESTING: True
