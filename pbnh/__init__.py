@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from typing import Any
 
 from flask import Flask
@@ -67,7 +68,7 @@ def create_app(
     app.register_blueprint(pbnh.views.blueprint)
 
     # Ensure the DB is accessible.
-    if check_db:
+    while check_db:
         import pbnh.db
 
         with app.app_context():
@@ -76,6 +77,12 @@ def create_app(
                     paster.query(hashid="Has the database been initialized?")
             except Exception as exc:
                 app.logger.error(exc)
-                return None
+                secs = 10
+                app.logger.info(
+                    f"The database is not usable. Trying again in {secs} seconds..."
+                )
+                time.sleep(secs)
+            else:
+                check_db = False
 
     return app

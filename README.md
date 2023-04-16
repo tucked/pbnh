@@ -82,18 +82,27 @@ docker run --interactive --tty \
 If the database is not initialized correctly, the server will produce an error like this:
 
 ```
-[2023-02-28 07:13:52 +0000] [7] [INFO] /etc/pbnh.yaml was loaded successfully.
-[2023-02-28 07:13:52 +0000] [7] [ERROR] (sqlite3.OperationalError) no such table: paste
+[2023-04-16 19:04:25 +0000] [1] [INFO] Starting gunicorn 20.1.0
+[2023-04-16 19:04:25 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+[2023-04-16 19:04:25 +0000] [1] [INFO] Using worker: sync
+[2023-04-16 19:04:25 +0000] [7] [INFO] Booting worker with pid: 7
+[2023-04-16 19:04:26 +0000] [7] [INFO] PBNH_CONFIG is not set in the environment. Trying /etc/pbnh.yaml...
+[2023-04-16 19:04:26 +0000] [7] [INFO] /etc/pbnh.yaml was loaded successfully.
+[2023-04-16 19:04:26 +0000] [7] [ERROR] (sqlite3.OperationalError) no such table: paste
 [SQL: SELECT paste.id AS paste_id, paste.hashid AS paste_hashid, paste.ip AS paste_ip, paste.timestamp AS paste_timestamp, paste.mime AS paste_mime, paste.sunset AS paste_sunset, paste.data AS paste_data
 FROM paste
 WHERE paste.hashid = ?
  LIMIT ? OFFSET ?]
 [parameters: ('Has the database been initialized?', 1, 0)]
-(Background on this error at: https://sqlalche.me/e/14/e3q8)
-Failed to find application object: 'create_app(check_db=True)'
-[2023-02-28 07:13:52 +0000] [7] [INFO] Worker exiting (pid: 7)
-[2023-02-28 07:13:53 +0000] [1] [INFO] Shutting down: Master
-[2023-02-28 07:13:53 +0000] [1] [INFO] Reason: App failed to load.
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2023-04-16 19:04:26 +0000] [7] [INFO] The database is not usable. Trying again in 10 seconds...
+```
+
+Note: If this happens, the container will remain running so that it can be used to initialize the database:
+
+``` sh
+docker ps  # Get the container name or ID.
+docker exec "$container_name_or_ID" pipenv run flask --app pbnh db init
 ```
 
 ### Execution

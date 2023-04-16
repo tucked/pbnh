@@ -12,9 +12,18 @@ def test_create_app_check_db(app):
     assert pbnh.create_app(app.config, check_db=True)
 
 
-def test_create_app_check_db_fails(override_config):
+def test_create_app_check_db_fails(override_config, monkeypatch):
     """Passing check_db to create_app fails if the DB is not initialized."""
-    assert pbnh.create_app(override_config, check_db=True) is None
+
+    class _TestDBCheckFailedError(Exception):
+        pass
+
+    def _fake_sleep(*args, **kwargs):
+        raise _TestDBCheckFailedError
+
+    monkeypatch.setattr(pbnh.time, "sleep", _fake_sleep)
+    with pytest.raises(_TestDBCheckFailedError):
+        pbnh.create_app(override_config, check_db=True)
 
 
 def test_config_nondebug(override_config):
