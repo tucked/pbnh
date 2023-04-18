@@ -107,11 +107,13 @@ class _Paster:
                 }
         return None
 
-    def delete(self, *, hashid: str) -> None:
+    def delete(self, *, hashid: str) -> bool:
         with self._session.begin():
             result = self._query(hashid=hashid)
             if result:
                 self._session.delete(result)
+                return True
+        return False
 
 
 def _get_engine() -> Engine:

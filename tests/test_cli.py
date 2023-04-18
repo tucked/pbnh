@@ -67,3 +67,11 @@ def test_cli_paste_info_hash_mismatch(test_cli_runner, monkeypatch):
     result = test_cli_runner.invoke(args=["paste", "info", hashid])
     assert hashid in result.output
     assert "WARNING" in result.output
+
+
+def test_cli_paste_remove(app, test_cli_runner):
+    """Pastes can be removed from the cLI."""
+    hashid = "abc123"
+    with app.app_context():
+        result = test_cli_runner.invoke(args=["paste", "remove", hashid])
+    assert hashid in result.output

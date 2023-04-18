@@ -60,3 +60,14 @@ def info(ctx: click.Context, show_data: bool, hashids: tuple[str]) -> None:
             + [("data", paste["data"] if show_data else f"({len(value)} bytes)")]
         ):
             click.echo(f"{column + ':':>15} {value}")
+
+
+@paste.command()  # type: ignore
+@click.argument("hashids", type=str, nargs=-1)
+@click.pass_context
+def remove(ctx: click.Context, hashids: tuple[str]) -> None:
+    """Remove pastes."""
+    for hashid in hashids:
+        removed = ctx.obj.data["paster"].delete(hashid=hashid)
+        message = "removed" if removed else "not found"
+        click.echo(f"{hashid} {message}")

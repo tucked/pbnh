@@ -88,4 +88,4 @@ def test_delete(paster):
 
 def test_delete_nonexistent(paster):
     with paster as p:
-        assert p.delete(hashid="nonexistent") is None
+        assert not p.delete(hashid="nonexistent")
