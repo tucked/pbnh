@@ -116,6 +116,7 @@ def test_follow_redirect(redirect_key, test_client, mode):
     assert j.get("hashid") == hashid
     response = test_client.get(f"/{hashid}{mode}")
     assert response.status_code == 302
+    assert response.location == url
 
 
 def test_redirect_with_extension(redirect_key, test_client):
