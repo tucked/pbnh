@@ -132,6 +132,16 @@ def test_paste_file_content(content_key, test_client):
     assert j.get("hashid") == "4a756ca07e9487f482465a99e8286abc86ba4dc7"
 
 
+def test_paste_content_existing(content_key, test_client):
+    data = {content_key: b"contents"}
+    response = test_client.post("/", data=data)
+    assert response.status_code == 201
+    j = json.loads(response.data.decode("utf-8"))
+    assert j.get("hashid") == "4a756ca07e9487f482465a99e8286abc86ba4dc7"
+    response = test_client.post("/", data=data)
+    assert response.status_code == 200
+
+
 @pytest.mark.parametrize("mode", ["", "/md"])
 @pytest.mark.parametrize("suffix", ["", ".md"])
 def test_markdown(content_key, test_client, mode, suffix):
