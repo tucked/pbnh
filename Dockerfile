@@ -17,6 +17,9 @@ COPY Pipfile Pipfile.lock ./
 RUN pipenv install --deploy
 
 FROM base AS test
+RUN apt update && apt install --assume-yes \
+    chromium \
+    firefox-esr
 RUN pipenv install --deploy --dev
 COPY . .
 COPY --from=frontend /frontend/dist/ pbnh/static/dist/
