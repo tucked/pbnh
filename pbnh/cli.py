@@ -8,24 +8,24 @@ import pbnh.db
 blueprint = Blueprint("cli", __name__, cli_group=None)
 
 
-@blueprint.cli.group()  # type: ignore
+@blueprint.cli.group()
 def db() -> None:
     pass
 
 
-@db.command()  # type: ignore
+@db.command()
 def init() -> None:
     pbnh.db.init_db()
     click.echo("initialized the database successfully")
 
 
-@blueprint.cli.group()  # type: ignore
+@blueprint.cli.group()
 @click.pass_context
 def paste(ctx: click.Context) -> None:
     ctx.obj.data["paster"] = ctx.with_resource(pbnh.db.paster_context())
 
 
-@paste.command()  # type: ignore
+@paste.command()
 @click.option(
     "--show-data/--no-show-data",
     help="whether to show paste data",
@@ -62,7 +62,7 @@ def info(ctx: click.Context, show_data: bool, hashids: tuple[str]) -> None:
             click.echo(f"{column + ':':>15} {value}")
 
 
-@paste.command()  # type: ignore
+@paste.command()
 @click.argument("hashids", type=str, nargs=-1)
 @click.pass_context
 def remove(ctx: click.Context, hashids: tuple[str]) -> None:
