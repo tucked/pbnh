@@ -251,7 +251,7 @@ def redirect_to_raw(hashid: str, mode: str = "") -> flask.typing.ResponseReturnV
         "There is no extension associated with"
         f" the paste's media type ({paste['mime']}).",
     )
-    location = f"/{hashid}.{extension}"
+    location = f"/{hashid}{extension}"
     if mode:
         location += f"/{mode}"
     return redirect(location, 301)
