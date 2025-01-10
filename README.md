@@ -22,6 +22,8 @@ Pre-built images of the project are [available on Docker Hub](https://hub.docker
 docker pull tucked/pbnh:latest
 ```
 
+[![Docker Image Size](https://img.shields.io/docker/image-size/tucked/pbnh)](https://hub.docker.com/r/tucked/pbnh)
+
 ### Configuration
 
 Before deploying, create a configuration file that tells the app _how_ to run:
@@ -124,6 +126,8 @@ The project repository is [available on GitHub](https://github.com/tucked/pbnh):
 ``` sh
 git clone https://github.com/tucked/pbnh
 ```
+
+[![GitHub Repo Size](https://img.shields.io/github/repo-size/tucked/pbnh)](https://github.com/tucked/pbnh)
 
 ### Building
 
