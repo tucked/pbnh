@@ -68,14 +68,14 @@ def _render_asciicast(*, hashid: str, extension: str = "", **_: Any) -> str:
         except json.JSONDecodeError:
             params[key] = str(value)
     return render_template(
-        "asciinema.html", url=f"/{hashid}.{extension}", params=params
+        "asciinema.html.jinja", url=f"/{hashid}.{extension}", params=params
     )
 
 
 def _render_markdown(*, hashid: str, extension: str = "", **_: Any) -> str:
     if not extension:
         extension = "md"
-    return render_template("markdown.html", url=f"/{hashid}.{extension}")
+    return render_template("markdown.html.jinja", url=f"/{hashid}.{extension}")
 
 
 def _render_raw(
@@ -142,7 +142,10 @@ def _render_text(
         mime = paste["mime"]
         extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:] or mime
     return render_template(
-        "paste.html", paste=_decoded_data(paste["data"]), mime=mime, extension=extension
+        "paste.html.jinja",
+        paste=_decoded_data(paste["data"]),
+        mime=mime,
+        extension=extension,
     )
 
 
@@ -166,7 +169,7 @@ def _renderer_for_mode(
 
 @blueprint.get("/")
 def index() -> str:
-    return render_template("index.html")
+    return render_template("index.html.jinja")
 
 
 @blueprint.post("/")
@@ -225,7 +228,7 @@ def about() -> flask.typing.ResponseReturnValue:
         # /about used to be /about.md:
         return redirect("/about", 301)
     return render_template(
-        "markdown.html", url=f"{current_app.static_url_path}/about.md"
+        "markdown.html.jinja", url=f"{current_app.static_url_path}/about.md"
     )
 
 
@@ -280,4 +283,4 @@ def view_paste(
 
 @blueprint.errorhandler(404)
 def fourohfour(error: Exception) -> tuple[str, int]:
-    return render_template("404.html"), 404
+    return render_template("404.html.jinja"), 404
