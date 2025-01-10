@@ -1,9 +1,5 @@
 # pbnh
 
-[![GitHub Repo Size](https://img.shields.io/github/repo-size/tucked/pbnh)](https://github.com/tucked/pbnh)
-[![Docker Image Size](https://img.shields.io/docker/image-size/tucked/pbnh)](https://hub.docker.com/r/tucked/pbnh)
-
-
 A [Content-Addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [Pastebin](https://en.wikipedia.org/wiki/Pastebin) featuring
 
 - Syntax Highlighting by [CodeMirror](https://github.com/codemirror/codemirror)
@@ -16,6 +12,7 @@ It is highly derived from [silverp1](https://github.com/silverp1)'s and [buhman]
 ## Usage
 
 See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) for usage details.
+If you find a bug, have a question, or want to request a feature, [open an issue](https://github.com/tucked/pbnh/issues/new).
 
 ## Deployment
 
@@ -24,6 +21,8 @@ Pre-built images of the project are [available on Docker Hub](https://hub.docker
 ```sh
 docker pull tucked/pbnh:latest
 ```
+
+[![Docker Image Size](https://img.shields.io/docker/image-size/tucked/pbnh)](https://hub.docker.com/r/tucked/pbnh)
 
 ### Configuration
 
@@ -127,6 +126,8 @@ The project repository is [available on GitHub](https://github.com/tucked/pbnh):
 ``` sh
 git clone https://github.com/tucked/pbnh
 ```
+
+[![GitHub Repo Size](https://img.shields.io/github/repo-size/tucked/pbnh)](https://github.com/tucked/pbnh)
 
 ### Building
 
