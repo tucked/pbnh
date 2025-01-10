@@ -9,10 +9,6 @@ A [Content-Addressed](https://en.wikipedia.org/wiki/Content-addressable_storage)
 
 It is highly derived from [silverp1](https://github.com/silverp1)'s and [buhman](https://github.com/buhman)'s project [pb](https://github.com/ptpb/pb), and they deserve recognition for this idea.
 
-## Usage
-
-See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) for usage details.
-
 ## Deployment
 
 Pre-built images of the project are [available on Docker Hub](https://hub.docker.com/r/tucked/pbnh):
