@@ -1,5 +1,9 @@
 # pbnh
 
+[![GitHub Repo Size](https://img.shields.io/github/repo-size/tucked/pbnh)](https://github.com/tucked/pbnh)
+[![Docker Image Size](https://img.shields.io/docker/image-size/tucked/pbnh)](https://hub.docker.com/r/tucked/pbnh)
+
+
 A [Content-Addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [Pastebin](https://en.wikipedia.org/wiki/Pastebin) featuring
 
 - Syntax Highlighting by [CodeMirror](https://github.com/codemirror/codemirror)
