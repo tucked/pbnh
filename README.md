@@ -15,16 +15,10 @@ See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) fo
 
 ## Deployment
 
-A pre-built image of the project is [available from Docker Hub](https://hub.docker.com/r/tucked/pbnh):
+Pre-built images of the project are [available on Docker Hub](https://hub.docker.com/r/tucked/pbnh):
 
 ```sh
 docker pull tucked/pbnh:latest
-```
-
-Alternatively, it can always be built locally:
-
-``` sh
-docker build --tag pbnh:latest .
 ```
 
 ### Configuration
@@ -76,7 +70,7 @@ Next, initialize the database:
 docker run --interactive --tty \
     --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
-    pbnh:latest pipenv run flask --app pbnh db init
+    tucked/pbnh:latest pipenv run flask --app pbnh db init
 ```
 
 If the database is not initialized correctly, the server will produce an error like this:
@@ -114,7 +108,7 @@ docker run --interactive --tty \
     --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     --publish 12345:8000 \
-    pbnh:latest
+    tucked/pbnh:latest
 ```
 
 Then, open http://localhost:12345/ in a browser.
@@ -124,6 +118,24 @@ See https://flask.palletsprojects.com/en/2.2.x/deploying/ for more information.
 
 ## Development
 
+The project repository is [available on GitHub](https://github.com/tucked/pbnh):
+
+``` sh
+git clone https://github.com/tucked/pbnh
+```
+
+### Building
+
+Use `docker` to build the project locally:
+
+``` sh
+docker build --tag pbnh:dev .
+```
+
+Alternatively, use the `bin/run.sh` script to build and run a development instance.
+
+### Testing
+
 To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yml`:
 
 ``` sh
@@ -131,3 +143,5 @@ docker compose -f docker-compose.test.yml run sut
 ```
 
 Note: This pattern is meant to be compatible with [automated repository testing on Docker Hub](https://docs.docker.com/docker-hub/builds/automated-testing/).
+
+Alternatively, use the `bin/test.sh` script (which has the additional benefit of cleaning up after successful runs).
