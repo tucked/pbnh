@@ -15,7 +15,7 @@ See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) fo
 
 ## Deployment
 
-A pre-built image of the project is [available from Docker Hub](https://hub.docker.com/r/tucked/pbnh):
+Pre-built images of the project are [available on Docker Hub](https://hub.docker.com/r/tucked/pbnh):
 
 ```sh
 docker pull tucked/pbnh:latest
@@ -70,7 +70,7 @@ Next, initialize the database:
 docker run --interactive --tty \
     --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
-    pbnh:latest pipenv run flask --app pbnh db init
+    tucked/pbnh:latest pipenv run flask --app pbnh db init
 ```
 
 If the database is not initialized correctly, the server will produce an error like this:
@@ -108,7 +108,7 @@ docker run --interactive --tty \
     --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     --publish 12345:8000 \
-    pbnh:latest
+    tucked/pbnh:latest
 ```
 
 Then, open http://localhost:12345/ in a browser.
@@ -117,6 +117,12 @@ Note: In a production environment, a reverse proxy (e.g. nginx) should be deploy
 See https://flask.palletsprojects.com/en/2.2.x/deploying/ for more information.
 
 ## Development
+
+The project repository is [available on GitHub](https://github.com/tucked/pbnh):
+
+``` sh
+git clone https://github.com/tucked/pbnh
+```
 
 ### Building
 
