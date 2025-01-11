@@ -41,12 +41,6 @@ def test_about_md(test_client):
     assert response.location == "/about"
 
 
-def test_static(test_client):
-    """Flask handles static files automatically."""
-    response = test_client.get("/static/about.md")
-    assert response.status_code == 200
-
-
 @pytest.mark.parametrize(
     "path", ["/nonexistent", "/nonexistent.txt", "nonexistent/txt"]
 )

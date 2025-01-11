@@ -1,0 +1,93 @@
+<html>
+<head>
+    <title>About pbnh</title>
+</head>
+<body>
+    <h1 id="about">About</h1>
+    <p>
+        <a href="https://github.com/tucked/pbnh">pbnh</a> is a <a href="https://en.wikipedia.org/wiki/Content-addressable_storage">content-addressed</a> <a href="https://en.wikipedia.org/wiki/Pastebin">pastebin</a>.
+        It supports <a href="#paste-creation">anonymous text/file upload</a> of data that can then be <a href="#raw-retrieval">downloaded</a> or <a href="#web-rendering">rendered for the Web</a>.
+    </p>
+    <h2 id="paste-creation">Paste Creation</h2>
+    <p>
+        Pastes can be created with the Web UI (on the home page), from a CLI or shell script(e.g. using <code>curl</code>), or programmatically (e.g. using <code>python-requests</code>).
+    </p>
+    <h3 id="api">API</h3>
+    <p>
+        Any HTTP client may <code>POST /</code> with the form inputs described below to create a new paste.
+    </p>
+    <p>
+        Here's an example in Python:
+    </p>
+    <pre><code class="language-python">import requests
+
+    # Text
+    requests.post("http://{{ host }}/", data={"content": "Hello world!"})
+
+    # File
+    with open("/path/to/file.txt") as content_f:
+        requests.post("http://{{ host }}/", files={"content": content_f})
+    </code></pre>
+    <h4 id="contentc-required"><code>content</code>/<code>c</code> (required)</h4>
+    <p>
+        Associate data with the paste.
+    </p>
+    <pre><code class="language-sh"># Text
+    curl --form content="Hello world!" {{ host }}
+
+    # File (by path)
+    curl --form content=@/path/to/file.txt {{ host }}
+
+    # File (by pipe)
+    fortune | curl --form content=@- {{ host }}
+    </code></pre>
+    <h5 id="redirectr"><code>redirect</code>/<code>r</code></h5>
+    <p>
+        Replace the <code>content</code> input with one named <code>redirect</code> to create a redirect paste.
+        The data will be interpreted as a URI target that future clients should be redirected to.
+    </p>
+    <pre><code class="language-sh">curl --form redirect="https://www.example.com/" {{ host }}
+    </code></pre>
+    <ul>
+        <li>Note: <code>redirect</code> causes the <code>content</code> and <code>mime</code> inputs to be ignored.</li>
+    </ul>
+    <h4 id="mime"><code>mime</code></h4>
+    <p>
+        Specify the <a href="https://www.iana.org/assignments/media-types/media-types.xhtml">MIME type</a> of the paste's data.
+        If this is not set, pbnh will attempt to guess it.</p>
+    <pre><code class="language-sh">curl --form content=@/path/to/file.pdf --form mime=application/pdf {{ host }}
+    </code></pre>
+    <h4 id="sunset"><code>sunset</code></h4>
+    <p>
+        Mark the paste for deletion after a certain period of time (in seconds).
+    </p>
+    <pre><code class="language-sh">curl --form content="Burn this after 10 seconds!" --form sunset=10 {{ host }}
+    </code></pre>
+    <ul>
+        <li>Note: Currently, there is no automatic mechanism for deleting pastes after their sunset.</li>
+    </ul>
+    <h2 id="raw-retrieval">Raw Retrieval</h2>
+    <p>
+        If a file extension is appended to the paste ID in the requested URI (i.e. <code>GET /&lt;hashid&gt;.&lt;extension&gt;</code>),
+        the paste will be returned unmodified with the <code>Content-Type</code> header set to the type associated with the extension.
+        Append a <code>.</code> with no extension (i.e. <code>GET /&lt;hashid&gt;.</code>) to use the type associated with the paste.
+    </p>
+    <h2 id="web-rendering">Web Rendering</h2>
+    <p>
+        If only the paste ID is requested (i.e. <code>GET /&lt;hashid&gt;</code> or <code>GET /&lt;hashid&gt;/</code>),
+        the paste will be rendered for a Web browser according to the paste's associated MIME type.
+        A rendering mode can be explicitly selected by appending <code>/&lt;mode&gt;</code> to the URI.
+    </p>
+    <p>
+        Currently, the following rendering modes are supported:
+    </p>
+    <ul>
+        <li><p><a href="https://asciinema.org/">Asciicasts</a> (<code>application/x-asciicast</code>): <code>GET /&lt;hashid&gt;/cast</code></p></li>
+        <li><p><a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a> (<code>text/markdown</code>): <code>GET /&lt;hashid&gt;/md</code></p></li>
+        <li><p><a href="https://en.wikipedia.org/wiki/ReStructuredText">reStructuredText</a> (<code>text/x-rst</code>): <code>GET /&lt;hashid&gt;/rst</code></p></li>
+    </ul>
+    <p>
+        Additionally, syntax highlighting is supported for many other text types: <code>GET /&lt;hashid&gt;/text</code>
+    </p>
+</body>
+</html>
