@@ -21,12 +21,6 @@ A pre-built image of the project is [available from Docker Hub](https://hub.dock
 docker pull tucked/pbnh:latest
 ```
 
-Alternatively, it can always be built locally:
-
-``` sh
-docker build --tag pbnh:latest .
-```
-
 ### Configuration
 
 Before deploying, create a configuration file that tells the app _how_ to run:
@@ -123,6 +117,18 @@ Note: In a production environment, a reverse proxy (e.g. nginx) should be deploy
 See https://flask.palletsprojects.com/en/2.2.x/deploying/ for more information.
 
 ## Development
+
+### Building
+
+Use `docker` to build the project locally:
+
+``` sh
+docker build --tag pbnh:dev .
+```
+
+Alternatively, use the `bin/run.sh` script to build and run a development instance.
+
+### Testing
 
 To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yml`:
 
