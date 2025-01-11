@@ -28,6 +28,6 @@ conf="$(dirname "$db")/pbnh-$USER.yaml"
 container='pbnh_dev'
 docker kill "$container" || true
 docker rm "$container" || true
-docker run -v "$PWD/paste.yaml:/etc/pbnh.yaml:ro" -v "$db:/pbnh/tmpdb.sqlite" -p 8000:8000 -d --name "$container" "$tag"
+docker run -v "$conf:/etc/pbnh.yaml:ro" -v "$db:$container_db" -p 8000:8000 -d --name "$container" "$tag"
 docker exec "$container" pipenv run flask --app pbnh db init
 docker attach "$container"
