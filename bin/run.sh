@@ -46,4 +46,4 @@ docker run --name "$container" \
     --detach \
     "$tag"
 docker exec "$container" pipenv run flask --app pbnh db init
-docker attach "$container"
+docker logs --follow "$container"
