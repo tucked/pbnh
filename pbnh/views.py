@@ -8,7 +8,6 @@ from docutils.core import publish_parts
 from flask import (
     abort,
     Blueprint,
-    current_app,
     redirect,
     render_template,
     request,
@@ -227,9 +226,7 @@ def about() -> flask.typing.ResponseReturnValue:
     if str(request.url_rule) == "/about.md":
         # /about used to be /about.md:
         return redirect("/about", 301)
-    return render_template(
-        "markdown.html.jinja", url=f"{current_app.static_url_path}/about.md"
-    )
+    return render_template("about.html.jinja", host=request.host)
 
 
 @blueprint.get("/<string:hashid>/")

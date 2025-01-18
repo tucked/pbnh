@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <title>pbnh</title>
+        <script src="{{ url_for('static', filename='marked.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='purify.min.js') }}"></script>
+    </head>
+    <body>
+        <div id="content"></div>
+        <script>
+            const xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", "{{ url_for('static', filename='about.md') }}", false);
+            xmlhttp.send();
+            document.getElementById("content").innerHTML = DOMPurify.sanitize(marked.parse(xmlhttp.responseText.replace(/pbnh.example.com/g, "{{ host }}")));
+        </script>
+    </body>
+</html>
