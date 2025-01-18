@@ -1,6 +1,6 @@
 # About
 
-[pbnh](https://github.com/bhanderson/pbnh) is a [content-addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [pastebin](https://en.wikipedia.org/wiki/Pastebin).
+[pbnh](https://github.com/tucked/pbnh) is a [content-addressed](https://en.wikipedia.org/wiki/Content-addressable_storage) [pastebin](https://en.wikipedia.org/wiki/Pastebin).
 It supports [anonymous text/file upload](#paste-creation) of data that can then be [downloaded](#raw-retrieval) or [rendered for the Web](#web-rendering).
 
 ## Paste Creation
