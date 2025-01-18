@@ -24,10 +24,26 @@ conf="$(dirname "$db")/pbnh-$USER.yaml"
     echo 'TESTING: True'
 } > "$conf"
 
+# Create a gunicorn config file, if necessary:
+gunicorn_conf="$(dirname "$db")/pbnh-$USER-gunicorn.conf.py"
+[ -e "$gunicorn_conf" ] || {
+    echo 'loglevel = "debug"'
+} > "$gunicorn_conf"
+
 # Clean up any past runs and start the app:
 container='pbnh_dev'
 docker kill "$container" || true
 docker rm "$container" || true
-docker run -v "$conf:/etc/pbnh.yaml:ro" -v "$db:$container_db" -p 8000:8000 -d --name "$container" "$tag"
+# > If the PORT environment variable is defined, the default is ['0.0.0.0:$PORT'].
+# > If it is not defined, the default is ['127.0.0.1:8000'].
+export PORT="${PORT:-8000}"
+docker run --name "$container" \
+    -v "$conf:/etc/pbnh.yaml:ro" \
+    -v "$db:$container_db" \
+    -v "$gunicorn_conf:/pbnh/gunicorn.conf.py:ro" \
+    --env PORT \
+    -p "$PORT:$PORT" \
+    --detach \
+    "$tag"
 docker exec "$container" pipenv run flask --app pbnh db init
-docker attach "$container"
+docker logs --follow "$container"
