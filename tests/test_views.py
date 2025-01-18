@@ -328,3 +328,10 @@ def test_get_no_extension_unguessable_slash(content_key, test_client):
     response = test_client.get(f"/{hashid}/")
     assert response.status_code == 301
     assert response.location == f"/{hashid}/raw"
+
+
+def test_get_raw_content_length(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}/raw")
+    assert "Content-Length" in response.headers

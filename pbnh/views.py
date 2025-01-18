@@ -1,5 +1,4 @@
 from datetime import datetime, timezone, timedelta
-import io
 import json
 import mimetypes
 from pathlib import Path
@@ -95,7 +94,7 @@ def _render_raw(
         )
     if not paste:
         paste = _get_paste(hashid)
-    return Response(io.BytesIO(paste["data"]), mimetype=mime or paste["mime"])
+    return Response(paste["data"], mimetype=mime or paste["mime"])
 
 
 def _render_redirect(
