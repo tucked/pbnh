@@ -11,7 +11,8 @@ It is highly derived from [silverp1](https://github.com/silverp1)'s and [buhman]
 
 ## Usage
 
-See [about.md](pbnh/static/about.md) (available at `/about` after Deployment) for usage details.
+See [about.md](https://github.com/tucked/pbnh/blob/main/pbnh/static/about.md) (available at `/about` after Deployment) for usage details.
+If you find a bug, have a question, or want to request a feature, [open an issue](https://github.com/tucked/pbnh/issues/new).
 
 ## Deployment
 
