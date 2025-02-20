@@ -100,11 +100,22 @@ def test_paste_empty(test_client):
     assert response.status_code == 400
 
 
-def test_redirect(redirect_key, test_client):
-    response = test_client.post("/", data={redirect_key: "http://www.google.com"})
+@pytest.mark.parametrize(
+    "url,hashid",
+    [
+        ("http://www.google.com", "738ddf35b3a85a7a6ba7b232bd3d5f1e4d284ad1"),
+        pytest.param(
+            "https://www.example.com/#" + ("x" * 4000),
+            "65ce13d38a96f835251f9a374891da07d586473c",
+            id="longURL",
+        ),
+    ],
+)
+def test_redirect(redirect_key, url, hashid, test_client):
+    response = test_client.post("/", data={redirect_key: url})
     j = json.loads(response.data.decode("utf-8"))
     assert response.status_code == 201
-    assert j.get("hashid") == "738ddf35b3a85a7a6ba7b232bd3d5f1e4d284ad1"
+    assert j.get("hashid") == hashid
 
 
 @pytest.mark.parametrize("mode", ["", "/redirect"])
