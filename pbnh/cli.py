@@ -43,21 +43,30 @@ def info(ctx: click.Context, show_data: bool, hashids: tuple[str]) -> None:
         if paste is None:
             click.echo(f"{hashid} not found")
             continue
-        value = paste["hashid"]
-        hashid = hashlib.sha1(paste["data"], usedforsecurity=False).hexdigest()
-        if value != hashid:
-            value += click.style(
-                f" (WARNING: expected {hashid})",
-                fg="yellow",
-            )
+        data_sha1 = hashlib.sha1(paste["data"], usedforsecurity=False).hexdigest()
         for column, value in (
-            [("hashid", value)]
+            [
+                (
+                    "hashid",
+                    paste["hashid"]
+                    + (
+                        click.style(f" (WARNING: expected {data_sha1})", fg="yellow")
+                        if data_sha1 != paste["hashid"]
+                        else ""
+                    ),
+                )
+            ]
             + [
                 (column, value)
                 for column, value in paste.items()
                 if column not in {"data", "hashid"}
             ]
-            + [("data", paste["data"] if show_data else f"({len(value)} bytes)")]
+            + [
+                (
+                    "data",
+                    paste["data"] if show_data else f"({len(paste['data'])} bytes)",
+                )
+            ]
         ):
             click.echo(f"{column + ':':>15} {value}")
 
