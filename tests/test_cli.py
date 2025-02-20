@@ -60,6 +60,7 @@ def test_cli_paste_info_not_found(app, test_cli_runner):
 def test_cli_paste_info_hash_mismatch(test_cli_runner, monkeypatch):
     """A warning is emitted if a paste hashid doesn't match the data."""
     data = b"Example Data"
+    assert len(data) != 40, "Test data should not be the same length as the hashid."
     hashid = "hash-does-not-match"
     monkeypatch.setattr(
         "pbnh.db.paster_context", fake_paster_context_factory(hashid, data)
@@ -67,6 +68,7 @@ def test_cli_paste_info_hash_mismatch(test_cli_runner, monkeypatch):
     result = test_cli_runner.invoke(args=["paste", "info", hashid])
     assert hashid in result.output
     assert "WARNING" in result.output
+    assert f"{len(data)} bytes" in result.output
 
 
 def test_cli_paste_remove(app, test_cli_runner):
