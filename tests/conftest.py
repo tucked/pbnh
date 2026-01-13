@@ -1,7 +1,7 @@
 import pytest
 
-from pbnh import create_app
 import pbnh.db
+from pbnh import create_app
 
 
 @pytest.fixture

@@ -5,9 +5,8 @@ import os
 import time
 from typing import Any
 
-from flask import Flask
 import yaml
-
+from flask import Flask
 
 CONFIG_PATH_DEFAULT = "/etc/pbnh.yaml"
 CONFIG_PATH_ENV_VAR = "PBNH_CONFIG"
