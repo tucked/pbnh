@@ -2,7 +2,6 @@ import contextlib
 import hashlib
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Optional
 
 import magic
 import sqlalchemy.exc
@@ -67,10 +66,10 @@ class _Paster:
     def create(
         self,
         data: bytes,
-        ip: Optional[str] = None,
-        mime: Optional[str] = None,
-        sunset: Optional[datetime] = None,
-        timestamp: Optional[datetime] = None,
+        ip: str | None = None,
+        mime: str | None = None,
+        sunset: datetime | None = None,
+        timestamp: datetime | None = None,
     ) -> str:
         hashid = hashlib.sha1(
             data,
