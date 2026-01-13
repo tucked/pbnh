@@ -122,7 +122,7 @@ def _render_restructuredtext(
     if not paste:
         paste = _get_paste(hashid)
     return Response(
-        publish_parts(_decoded_data(paste["data"]), writer_name="html")["html_body"]
+        publish_parts(_decoded_data(paste["data"]), writer="html")["html_body"]
     )
 
 

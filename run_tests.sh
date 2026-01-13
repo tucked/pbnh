@@ -2,7 +2,8 @@
 set -o errexit
 set -o xtrace
 pipenv install --deploy --dev
-pipenv check
+pipenv run pip install pip-audit
+pipenv audit
 pipenv run black --check pbnh tests
 pipenv run flake8 pbnh tests
 pipenv run mypy --strict pbnh
