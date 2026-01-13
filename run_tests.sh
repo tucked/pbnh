@@ -5,6 +5,7 @@ pipenv install --deploy --dev
 pipenv run pip install pip-audit
 pipenv audit
 pipenv run black --check pbnh tests
+pipenv run isort --check pbnh tests
 pipenv run flake8 pbnh tests
 pipenv run mypy --strict pbnh
 pipenv run bandit --recursive pbnh

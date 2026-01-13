@@ -1,7 +1,7 @@
 import contextlib
 import hashlib
-from io import BytesIO
 import json
+from io import BytesIO
 
 import pytest
 

@@ -1,22 +1,14 @@
-from datetime import datetime, timezone, timedelta
 import json
 import mimetypes
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from docutils.core import publish_parts
-from flask import (
-    abort,
-    Blueprint,
-    redirect,
-    render_template,
-    request,
-    Response,
-)
 import flask.typing
+from docutils.core import publish_parts
+from flask import Blueprint, Response, abort, redirect, render_template, request
 
 from pbnh import db
-
 
 blueprint = Blueprint("views", __name__)
 REDIRECT_MIME = "text/x.pbnh.redirect"

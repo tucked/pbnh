@@ -1,13 +1,20 @@
 import contextlib
-from datetime import datetime
 import hashlib
+from datetime import datetime
 from typing import Any, Iterator, Optional
 
-from flask import current_app, g
 import magic
 import sqlalchemy.exc
-from sqlalchemy import create_engine
-from sqlalchemy import Column, DateTime, Integer, LargeBinary, String, UniqueConstraint
+from flask import current_app, g
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Integer,
+    LargeBinary,
+    String,
+    UniqueConstraint,
+    create_engine,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.sql import func
