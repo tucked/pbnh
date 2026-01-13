@@ -1,7 +1,8 @@
 import contextlib
 import hashlib
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Optional
 
 import magic
 import sqlalchemy.exc

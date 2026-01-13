@@ -1,8 +1,9 @@
 import json
 import mimetypes
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import flask.typing
 from docutils.core import publish_parts
