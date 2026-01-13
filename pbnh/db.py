@@ -128,7 +128,9 @@ def _get_engine() -> Engine:
             raise PasteDBError(f"{key} is not set in the config.") from exc
         except (ValueError, sqlalchemy.exc.ArgumentError) as exc:
             raise PasteDBError(f"Config key {key} is malformed or unusable.") from exc
-        return g.engine
+        # mypy gives precedence to the g.engine type
+        # instead of the assignement above:
+        return g.engine  # type: ignore
 
 
 @contextlib.contextmanager
