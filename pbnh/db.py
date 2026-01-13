@@ -1,7 +1,7 @@
 import contextlib
 import hashlib
 from datetime import datetime
-from typing import Any, Iterator, Optional
+from typing import Iterator, Optional
 
 import magic
 import sqlalchemy.exc
@@ -100,7 +100,7 @@ class _Paster:
         filter_ = _Paste.hashid == hashid
         return self._session.query(_Paste).filter(filter_).first()
 
-    def query(self, *, hashid: str) -> dict[str, Any] | None:
+    def query(self, *, hashid: str) -> dict[str, object] | None:
         with self._session.begin():
             result = self._query(hashid=hashid)
             if result:

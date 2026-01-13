@@ -3,7 +3,6 @@
 import logging
 import os
 import time
-from typing import Any
 
 import yaml
 from flask import Flask
@@ -13,7 +12,7 @@ CONFIG_PATH_ENV_VAR = "PBNH_CONFIG"
 
 
 def create_app(
-    override_config: dict[str, Any] | None = None, /, *, check_db: bool = False
+    override_config: dict[str, object] | None = None, /, *, check_db: bool = False
 ) -> Flask | None:
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True)

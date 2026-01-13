@@ -47,7 +47,7 @@ def _mode_for_mime(mime: str) -> str:
     return "raw"
 
 
-def _render_asciicast(*, hashid: str, extension: str = "", **_: Any) -> str:
+def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
     if not extension:
         extension = "cast"
     # Prepare query params such that
@@ -63,7 +63,7 @@ def _render_asciicast(*, hashid: str, extension: str = "", **_: Any) -> str:
     )
 
 
-def _render_markdown(*, hashid: str, extension: str = "", **_: Any) -> str:
+def _render_markdown(*, hashid: str, extension: str = "", **_: object) -> str:
     if not extension:
         extension = "md"
     return render_template("markdown.html.jinja", url=f"/{hashid}.{extension}")
@@ -74,7 +74,7 @@ def _render_raw(
     hashid: str,
     extension: str = "",
     paste: dict[str, Any] | None = None,
-    **_: Any,
+    **_: object,
 ) -> Response:
     mime = ""
     if extension:
@@ -93,7 +93,7 @@ def _render_redirect(
     hashid: str,
     extension: str = "",
     paste: dict[str, Any] | None = None,
-    **_: Any,
+    **_: object,
 ) -> flask.typing.ResponseReturnValue:
     if extension:
         abort(400, "Extensions are not supported for redirects.")
@@ -107,7 +107,7 @@ def _render_restructuredtext(
     hashid: str,
     extension: str = "",
     paste: dict[str, Any] | None = None,
-    **_: Any,
+    **_: object,
 ) -> Response:
     if extension:
         abort(400, "Extensions are not supported for reStructedText rendering.")
@@ -123,7 +123,7 @@ def _render_text(
     hashid: str,
     extension: str = "",
     paste: dict[str, Any] | None = None,
-    **_: Any,
+    **_: object,
 ) -> str:
     if not paste:
         paste = _get_paste(hashid)
