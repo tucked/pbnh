@@ -5,7 +5,7 @@ It supports [anonymous text/file upload](#paste-creation) of data that can then 
 
 ## Paste Creation
 
-Pastes can be created with the Web UI (on the home page), from a CLI or shell script(e.g. using `curl`), or programmatically (e.g. using `python-requests`).
+Pastes can be created with the Web UI (on the home page), from a CLI or shell script (e.g. using `curl`), or programmatically (e.g. using `python-requests`).
 
 ### API
 
