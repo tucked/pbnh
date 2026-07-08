@@ -1,0 +1,20 @@
+{
+  "name": "pbnh-editor",
+  "description": "pbnh's CodeMirror-based editor",
+  "private": true,
+  "dependencies": {
+    "@babel/runtime": "^8.0.0",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/language-data": "^6.5.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "@uiw/codemirror-theme-monokai": "^4.25.7",
+    "codemirror": "^6.0.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "scripts": {
+    "build": "sh build.sh"
+  }
+}

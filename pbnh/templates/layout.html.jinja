@@ -1,13 +1,12 @@
 <html>
     <title>pbnh</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/codemirror.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/fullscreen.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/monokai.css') }}">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='font-awesome.min.css') }}">
-    <script src="{{ url_for('static', filename='codemirror/codemirror.js') }}"></script>
-    <script src="{{ url_for('static', filename='codemirror/fullscreen.js') }}"></script>
-    <script src="{{ url_for('static', filename='codemirror/meta.js') }}"></script>
-    <script src="{{ url_for('static', filename='codemirror/loadmode.js') }}"></script>
 
     <div title="Ctrl-N" id="newicon" style="
        color: #fff;
@@ -52,38 +51,28 @@
     <input type="submit" value="Submit a url to redirect to. Must include http://">
 </div>
 
-    <textarea id="paste" name="content">{{paste}}</textarea>
+    <textarea id="paste" name="content" style="display: none;">{{paste}}</textarea>
+    <div id="editor-container" style="height: 100%;"></div>
 
-    <script>
-        CodeMirror.modeURL = "{{ url_for('static', filename='codemirror/langs') }}/%N.js";
-        var editor = CodeMirror.fromTextArea(paste, {
-            lineNumbers: true,
-            theme: 'monokai',
-            indentUnit: 4,
-            fullScreen: true,
-            autofocus: true,
-            mode: '{{mime}}',
-            extraKeys: {"Ctrl-S": function() { saveicon.click(); },
-                        "Ctrl-N": function() { newicon.click(); },
-                       }
+    <script type="module">
+        import { createEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
+
+        window.editor = createEditor({
+            parent: document.getElementById('editor-container'),
+            doc: document.getElementById('paste').value,
+            mime: '{{mime}}',
+            extension: '{{extension}}',
+            onSave: function() { saveicon.click(); },
+            onNew: function() { newicon.click(); },
         });
+        editor.focus();
+
         newicon.addEventListener("click", function(){
                 window.location.href = '/';
         });
         helpicon.addEventListener("click", function(){
                 window.location.href = '/about';
         });
-        var info = CodeMirror.findModeByMIME('{{mime}}');
-        if (!info) {
-            info = CodeMirror.findModeByExtension('{{extension}}');
-        }
-        if (info) {
-            editor.setOption('mode', info.mime);
-            CodeMirror.autoLoadMode(editor, info.mode);
-            console.log(info.name);
-        } else {
-            console.warn('could not find the right highlighter');
-        }
     redirecticon.addEventListener('click', function () {
         var lightbox = document.getElementById("lightbox");
         lightbox.style.visibility = 'visible';
