@@ -26,6 +26,7 @@ pytest-cov = {version = ">=4.0"}
 pytest-randomly = {version = ">=3.12"}
 types-docutils = {version = ">=0.18"}
 types-pyyaml = {version = ">=6.0"}
+pip-audit = {version = ">=2.10"}
 
 [requires]
 python_version = "3.11"
