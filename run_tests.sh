@@ -2,7 +2,6 @@
 set -o errexit
 set -o xtrace
 pipenv install --deploy --dev
-pipenv run pip install pip-audit
 pipenv audit
 pipenv run black --check pbnh tests
 pipenv run isort --check pbnh tests
