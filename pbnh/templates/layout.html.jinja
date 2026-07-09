@@ -1,4 +1,6 @@
+<!DOCTYPE html>
 <html>
+    <head>
     <title>pbnh</title>
     <style>
         html, body {
@@ -7,7 +9,8 @@
         }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/font-awesome/css/font-awesome.min.css') }}">
-
+    </head>
+    <body bgcolor="#292923">
     <div title="Ctrl-N" id="newicon" style="
        color: #fff;
        cursor: pointer;
@@ -49,6 +52,7 @@
     <form action="/" method="post">
     <input type="text" name='redirect'><br>
     <input type="submit" value="Submit a url to redirect to. Must include http://">
+    </form>
 </div>
 
     <textarea id="paste" name="content" style="display: none;">{{paste}}</textarea>
@@ -80,7 +84,6 @@
         lightbox.style.left = window.innerWidth/2 - 100 + 'px';
     });
     </script>
-    <body bgcolor="#292923">
     {% block body %}{% endblock %}
     </body>
 
