@@ -34,7 +34,7 @@
         <div id="editor-container"></div>
         <ul id="toolbar">
             <li id="helpicon"><span class="fa fa-question fa-lg"></span></li>
-            <li id="newicon" title="Ctrl-N"><span class="fa fa-file-o fa-lg"></span></li>
+            <li id="newicon"><span class="fa fa-file-o fa-lg"></span></li>
             <li id="redirecticon"><span class="fa fa-external-link fa-lg"></span></li>
             <li id="saveicon" title="Ctrl-S"><span class="fa fa-save fa-lg"></span></li>
         </ul>
@@ -55,7 +55,6 @@
                 parent: document.getElementById('editor-container'),
                 url: {{ url|default('')|tojson }},
                 onSave: function() { saveicon.click(); },
-                onNew: function() { newicon.click(); },
             });
             editor.focus();
 

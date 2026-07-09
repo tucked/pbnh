@@ -33,7 +33,6 @@ export function createEditor({
   parent,
   url = "",
   onSave,
-  onNew,
 } = {}) {
   const extraKeys = [];
   if (onSave) {
@@ -47,18 +46,6 @@ export function createEditor({
       },
     });
   }
-  if (onNew) {
-    extraKeys.push({
-      key: "Ctrl-n",
-      mac: "Cmd-n",
-      preventDefault: true,
-      run: () => {
-        onNew();
-        return true;
-      },
-    });
-  }
-
   let doc = "";
   let mime = "";
   let filename = "";
