@@ -5,46 +5,39 @@
         <title>pbnh</title>
         <style>
             html, body {
+                background-color: #272822;  /* Make the background match codemirror-theme-monokai. */
+                color: white;
                 height: 100%;
                 margin: 0;
+            }
+            body {
+                display: flex;
+            }
+            #editor-container {
+                flex: 1;
+            }
+            #toolbar {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                list-style: none;
+                margin: 0;
+                padding: 1rem;
+            }
+            #toolbar li {
+                cursor: pointer;
             }
         </style>
         <link rel="stylesheet" href="{{ url_for('static', filename='dist/font-awesome/css/font-awesome.min.css') }}">
     </head>
     <body>
-        <div title="Ctrl-N" id="newicon" style="
-            color: #fff;
-            cursor: pointer;
-            padding-top: 10px;
-            position: absolute;
-            right: 90px;
-            z-index: 100;
-            "><i class="fa fa-file-o fa-lg"></i></div>
-        <div id="redirecticon" style="
-            color: #fff;
-            cursor: pointer;
-            padding-top: 10px;
-            position: absolute;
-            right: 58px;
-            z-index: 100;
-            "><i class="fa fa-external-link fa-lg"></i></div>
-        <div title="Ctrl-S" id="saveicon" style="
-            color: #fff;
-            cursor: pointer;
-            padding-top: 10px;
-            position: absolute;
-            right: 30px;
-            z-index: 100;
-            "><i class="fa fa-save fa-lg"></i></div>
-        <div id="helpicon" style="
-            color: #fff;
-            cursor: pointer;
-            padding-top: 10px;
-            position: absolute;
-            right: 10px;
-            z-index: 100;
-            "><i class="fa fa-question fa-lg"></i></div>
-
+        <div id="editor-container"></div>
+        <ul id="toolbar">
+            <li id="helpicon"><span class="fa fa-question fa-lg"></span></li>
+            <li id="newicon" title="Ctrl-N"><span class="fa fa-file-o fa-lg"></span></li>
+            <li id="redirecticon"><span class="fa fa-external-link fa-lg"></span></li>
+            <li id="saveicon" title="Ctrl-S"><span class="fa fa-save fa-lg"></span></li>
+        </ul>
         <div id="lightbox" style="
             visibility: hidden;
             position: absolute;
@@ -55,9 +48,6 @@
                 <input type="submit" value="Submit a url to redirect to. Must include http://">
             </form>
         </div>
-
-        <div id="editor-container" style="height: 100%;"></div>
-
         <script type="module">
             import { createEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
 
