@@ -1,6 +1,6 @@
-FROM node:20-slim AS editor
-WORKDIR /pbnh-editor
-COPY pbnh-editor/ ./
+FROM node:20-slim AS frontend
+WORKDIR /frontend
+COPY frontend/ ./
 RUN npm ci && npm run build
 
 FROM python:3.11-slim
@@ -15,6 +15,6 @@ WORKDIR /pbnh
 COPY Pipfile Pipfile.lock ./
 RUN pipenv install --deploy
 COPY . .
-COPY --from=editor /pbnh-editor/dist/ pbnh/static/dist/
+COPY --from=frontend /frontend/dist/ pbnh/static/dist/
 EXPOSE 8000
 CMD ["pipenv", "run", "gunicorn", "pbnh:create_app(check_db=True)"]
