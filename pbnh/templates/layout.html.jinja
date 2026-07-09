@@ -55,7 +55,7 @@
             </form>
         </div>
 
-        <textarea id="paste" name="content" style="display: none;">{{paste}}</textarea>
+        <textarea id="paste" name="content" style="display: none;">{{ paste }}</textarea>
         <div id="editor-container" style="height: 100%;"></div>
 
         <script type="module">
@@ -64,8 +64,8 @@
             window.editor = createEditor({
                 parent: document.getElementById('editor-container'),
                 doc: document.getElementById('paste').value,
-                mime: '{{mime}}',
-                extension: '{{extension}}',
+                mime: '{{ mime }}',
+                extension: '{{ extension }}',
                 onSave: function() { saveicon.click(); },
                 onNew: function() { newicon.click(); },
             });
