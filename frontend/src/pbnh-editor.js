@@ -92,7 +92,7 @@ export function createEditor({
       .catch((err) => {
         console.warn("could not load the language support for", description.name, err);
       });
-  } else {
+  } else if (extension || mime) {
     console.warn("could not find the right highlighter");
   }
 
