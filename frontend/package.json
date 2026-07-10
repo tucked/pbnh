@@ -1,6 +1,6 @@
 {
-  "name": "pbnh-editor",
-  "description": "pbnh's CodeMirror-based editor",
+  "name": "pbnh-frontend",
+  "description": "pbnh's client-side assets",
   "private": true,
   "dependencies": {
     "@babel/runtime": "^8.0.0",
@@ -9,7 +9,11 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
     "@uiw/codemirror-theme-monokai": "^4.25.7",
-    "codemirror": "^6.0.2"
+    "codemirror": "^6.0.2",
+    "asciinema-player": "^3.11.0",
+    "dompurify": "^3.2.7",
+    "font-awesome": "^4.7.0",
+    "marked": "^16.4.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"
