@@ -149,7 +149,7 @@ def _render_text(
         mime = paste["mime"]
         extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:] or mime
     return render_template(
-        "paste.html.jinja",
+        "editor.html.jinja",
         paste=_decoded_data(paste["data"]),
         mime=mime,
         extension=extension,
@@ -176,7 +176,7 @@ def _renderer_for_mode(
 
 @blueprint.get("/")
 def index() -> str:
-    return render_template("index.html.jinja")
+    return render_template("editor.html.jinja")
 
 
 @blueprint.post("/")

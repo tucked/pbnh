@@ -1,3 +1,4 @@
+{% set read_only = paste is defined and paste is not none %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -84,6 +85,30 @@
                 lightbox.style.left = window.innerWidth / 2 - 100 + 'px';
             });
         </script>
-        {% block body %}{% endblock %}
+        {% if read_only %}
+        <h1 id="loading-message" style="color:white;">If you are seeing this your paste is really big and
+            is taking a while to load. You can always add .&#60;extension&#62;to the
+            end of it to load the paste directly to the browser with the correct
+            mimetype</h1>
+        <script type="module">
+        editor.setReadOnly(true);
+        document.getElementById('loading-message')?.remove();
+        </script>
+        {% else %}
+        <script type="module">
+        saveicon.addEventListener('click', function () {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
+                    window.location.href = JSON.parse(xhttp.responseText).link + ".txt";
+                }
+            };
+            var myForm = new FormData();
+            myForm.append("content", editor.getValue());
+            xhttp.open("POST", "/");
+            xhttp.send(myForm);
+        });
+        </script>
+        {% endif %}
     </body>
 </html>
