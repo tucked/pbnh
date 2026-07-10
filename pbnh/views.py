@@ -70,6 +70,7 @@ def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
             params[key] = json.loads(value)
         except json.JSONDecodeError:
             params[key] = str(value)
+    params.setdefault("preload", True)
     return render_template(
         "asciinema.html.jinja", url=f"/{hashid}.{extension}", params=params
     )
