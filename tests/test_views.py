@@ -47,15 +47,6 @@ def test_static(test_client):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize(
-    "path", ["/nonexistent", "/nonexistent.txt", "nonexistent/txt"]
-)
-def test_nopaste(path, test_client):
-    response = test_client.get(path)
-    assert response.status_code == 404
-    assert "Paste Not Found" in response.text
-
-
 @pytest.mark.parametrize("mime", [{}, {"mime": "plain"}])
 def test_paste_string_content(content_key, mime, test_client):
     response = test_client.post("/", data={content_key: "abc", **mime})

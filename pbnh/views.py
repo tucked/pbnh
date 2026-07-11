@@ -269,8 +269,3 @@ def view_paste(
     paste = _get_paste(hashid)
     renderer = _renderer_for_mode(_mode_for_mime(paste["mime"]))
     return renderer(hashid=hashid, extension=extension, paste=paste)
-
-
-@blueprint.errorhandler(404)
-def fourohfour(error: Exception) -> tuple[str, int]:
-    return render_template("404.html.jinja"), 404
