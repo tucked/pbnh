@@ -135,19 +135,10 @@ def _render_text(
     paste: dict[str, Any] | None = None,
     **_: object,
 ) -> str:
-    if not paste:
-        paste = _get_paste(hashid)
-    if extension:
-        mime = _guess_mime(f"/{hashid}.{extension}") or extension
-    else:
-        mime = paste["mime"]
-        extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:] or mime
-    return render_template(
-        "editor.html.jinja",
-        paste=_decoded_data(paste["data"]),
-        mime=mime,
-        extension=extension,
-    )
+    if not extension:
+        mime = (paste or _get_paste(hashid))["mime"]
+        extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:]
+    return render_template("editor.html.jinja", url=f"/{hashid}.{extension}")
 
 
 def _renderer_for_mode(

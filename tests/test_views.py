@@ -217,6 +217,14 @@ def test_paste_non_utf8(content_key, test_client):
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(f"/{hashid}/txt")
+    assert response.status_code == 200
+
+
+def test_paste_non_utf8_unsupported(content_key, test_client):
+    response = test_client.post("/", data={content_key: (BytesIO(b"\xff"), "test")})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}/redirect")
     assert response.status_code == 422
 
 

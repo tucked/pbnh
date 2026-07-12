@@ -1,4 +1,4 @@
-{% set read_only = paste is defined and paste is not none %}
+{% set read_only = url is defined and url is not none %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -56,7 +56,6 @@
             </form>
         </div>
 
-        <textarea id="paste" name="content" style="display: none;">{{ paste }}</textarea>
         <div id="editor-container" style="height: 100%;"></div>
 
         <script type="module">
@@ -64,9 +63,7 @@
 
             window.editor = createEditor({
                 parent: document.getElementById('editor-container'),
-                doc: document.getElementById('paste').value,
-                mime: '{{ mime }}',
-                extension: '{{ extension }}',
+                url: {{ url|default('')|tojson }},
                 onSave: function() { saveicon.click(); },
                 onNew: function() { newicon.click(); },
             });
@@ -91,7 +88,6 @@
             end of it to load the paste directly to the browser with the correct
             mimetype</h1>
         <script type="module">
-        editor.setReadOnly(true);
         document.getElementById('loading-message')?.remove();
         </script>
         {% else %}
