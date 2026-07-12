@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import flask.typing
-from docutils.core import publish_parts
+from docutils.core import publish_string
 from flask import Blueprint, Response, abort, redirect, render_template, request
 
 from pbnh import db
@@ -126,9 +126,7 @@ def _render_restructuredtext(
         abort(400, "Extensions are not supported for reStructedText rendering.")
     if not paste:
         paste = _get_paste(hashid)
-    return Response(
-        publish_parts(_decoded_data(paste["data"]), writer="html")["html_body"]
-    )
+    return Response(publish_string(_decoded_data(paste["data"]), writer="html5"))
 
 
 def _render_text(
