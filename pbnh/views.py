@@ -122,11 +122,18 @@ def _render_restructuredtext(
     paste: dict[str, Any] | None = None,
     **_: object,
 ) -> Response:
-    if extension:
-        abort(400, "Extensions are not supported for reStructedText rendering.")
     if not paste:
         paste = _get_paste(hashid)
-    return Response(publish_string(_decoded_data(paste["data"]), writer="html5"))
+    source_path = hashid
+    if extension:
+        source_path += f".{extension}"
+    return Response(
+        publish_string(
+            _decoded_data(paste["data"]),
+            source_path=source_path,
+            writer="html5",
+        )
+    )
 
 
 def _render_text(
