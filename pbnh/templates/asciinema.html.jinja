@@ -1,15 +1,17 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <title>pbnh AsciinemaPlayer</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dist/asciinema-player.css') }}" />
         <script src="{{ url_for('static', filename='dist/asciinema-player.min.js') }}"></script>
     </head>
-    <body bgcolor="#292923">
+    <body>
         <div id="player-container"></div>
         <script>
             AsciinemaPlayer.create(
-                "{{url}}",
+                "{{ url }}",
                 document.getElementById("player-container"),
-                {{params|tojson}},
+                {{ params|tojson }},
             );
         </script>
     </body>

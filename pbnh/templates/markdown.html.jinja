@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <title>pbnh</title>
@@ -8,7 +9,7 @@
         <div id="content"></div>
         <script>
             const xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", "{{url}}", false);
+            xmlhttp.open("GET", "{{ url }}", false);
             xmlhttp.send();
             document.getElementById("content").innerHTML = DOMPurify.sanitize(marked.parse(xmlhttp.responseText));
         </script>
