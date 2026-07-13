@@ -1,3 +1,4 @@
+import functools
 import json
 import mimetypes
 from collections.abc import Callable
@@ -76,10 +77,28 @@ def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
     )
 
 
-def _render_markdown(*, hashid: str, extension: str = "", **_: object) -> str:
-    if not extension:
-        extension = "md"
-    return render_template("markdown.html.jinja", url=f"/{hashid}.{extension}")
+def _render_docutils(
+    *,
+    hashid: str,
+    extension: str = "",
+    paste: dict[str, Any] | None = None,
+    parser: str,
+    **_: object,
+) -> Response:
+    if not paste:
+        paste = _get_paste(hashid)
+    source_path = hashid
+    if extension:
+        source_path += f".{extension}"
+    return Response(
+        publish_string(
+            _decoded_data(paste["data"]),
+            source_path=source_path,
+            parser=parser,
+            writer="html5",
+            settings_overrides={"stylesheet_path": ["minimal.css"]},
+        )
+    )
 
 
 def _render_raw(
@@ -115,27 +134,6 @@ def _render_redirect(
     return redirect(_decoded_data(paste["data"]), 302)
 
 
-def _render_restructuredtext(
-    *,
-    hashid: str,
-    extension: str = "",
-    paste: dict[str, Any] | None = None,
-    **_: object,
-) -> Response:
-    if not paste:
-        paste = _get_paste(hashid)
-    source_path = hashid
-    if extension:
-        source_path += f".{extension}"
-    return Response(
-        publish_string(
-            _decoded_data(paste["data"]),
-            source_path=source_path,
-            writer="html5",
-        )
-    )
-
-
 def _render_text(
     *,
     hashid: str,
@@ -165,10 +163,10 @@ def _renderer_for_mode(
         # https://github.com/python/mypy/issues/12053
         return {  # type: ignore
             "cast": _render_asciicast,
-            "md": _render_markdown,
+            "md": functools.partial(_render_docutils, parser="markdown"),
             "raw": _render_raw,
             "redirect": _render_redirect,
-            "rst": _render_restructuredtext,
+            "rst": functools.partial(_render_docutils, parser="restructuredtext"),
             "text": _render_text,
             "txt": _render_text,  # legacy
         }[mode]

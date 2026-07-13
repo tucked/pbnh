@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "957358ef60cbeb4eb59989604a698679cc9d56c2b5afbc4875219f8b4c2ca087"
+            "sha256": "81fdfa4fff413d09e21312e51963af54dec62c809c21301d47774366f9bc7f29"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -157,6 +157,14 @@
             "markers": "python_version >= '3.7'",
             "version": "==3.1.6"
         },
+        "markdown-it-py": {
+            "hashes": [
+                "sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49",
+                "sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a"
+            ],
+            "markers": "python_version >= '3.10'",
+            "version": "==4.2.0"
+        },
         "markupsafe": {
             "hashes": [
                 "sha256:0303439a41979d9e74d18ff5e2dd8c43ed6c6001fd40e5bf2e43f7bd9bbc523f",
@@ -251,6 +259,30 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==3.0.3"
+        },
+        "mdit-py-plugins": {
+            "hashes": [
+                "sha256:214c82fb2ac524472ab6a5bcab1de80f73b50443e187f401bfd77efbc7c6481d",
+                "sha256:a2bca0f039f39dbd35fb74ae1b5f998608c437463371f0ff7f49a19a17a114d0"
+            ],
+            "markers": "python_version >= '3.10'",
+            "version": "==0.6.1"
+        },
+        "mdurl": {
+            "hashes": [
+                "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+                "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==0.1.2"
+        },
+        "myst-docutils": {
+            "hashes": [
+                "sha256:1aef68c43af65f6b6a4c73fb388ac6e267edcac6863045079e7d5556aca829af",
+                "sha256:42fa450dad69280051e87190f9fed426623b765f5f2944b50a72ea50d56f5fbf"
+            ],
+            "markers": "python_version >= '3.11'",
+            "version": "==5.1.0"
         },
         "packaging": {
             "hashes": [

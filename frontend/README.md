@@ -2,7 +2,7 @@
 
 pbnh makes use of libraries from NPM for various front-end functionality.
 
-Some libraries (e.g. `marked`, `dompurify`, etc.) come pre-built
+Some libraries (e.g. `asciinema-player`, etc.) come pre-built
 and can just be installed and copied into place.
 
 - Note: This is done instead of fetching from a CDN at request time to
@@ -36,4 +36,4 @@ npm run build
 ```
 
 Dependencies can also be updated using `npm` as usual
-(e.g. `npm install marked@latest`).
+(e.g. `npm install asciinema-player@latest`).

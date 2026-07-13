@@ -8,6 +8,7 @@ click = {version = ">=8.1"}
 docutils = {version = ">=0.18"}
 flask = {version = ">=2.0"}
 gunicorn = {version = ">=20.1"}
+myst-docutils = {version = ">=5.1"}
 psycopg2 = {version = ">=2.9"}
 pygments = {version = ">=2.20"}
 python-magic = {version = ">=0.4"}
