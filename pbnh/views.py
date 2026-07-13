@@ -23,6 +23,17 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
 
 
 def _get_paste(hashid: str) -> dict[str, Any]:
+    if hashid == "about":
+        about_path = Path(__file__).parent / "static" / "about.md"
+        about_text = about_path.read_text().replace("pbnh.example.com", request.host)
+        return {
+            "data": about_text.encode(),
+            "hashid": hashid,
+            "ip": request.remote_addr,
+            "mime": "text/markdown",
+            "sunset": None,
+            "timestamp": request.date,
+        }
     with db.paster_context() as paster:
         return paster.query(hashid=hashid) or abort(404)
 
@@ -211,15 +222,6 @@ def create_paste() -> tuple[dict[str, str], int]:
 
     # Return the paste.
     return {"hashid": hashid, "link": request.url + hashid}, status
-
-
-@blueprint.get("/about")
-@blueprint.get("/about.md")
-def about() -> flask.typing.ResponseReturnValue:
-    if str(request.url_rule) == "/about.md":
-        # /about used to be /about.md:
-        return redirect("/about", 301)
-    return render_template("about.html.jinja", host=request.host)
 
 
 @blueprint.get("/<string:hashid>/")
