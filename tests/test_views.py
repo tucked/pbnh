@@ -142,7 +142,7 @@ def test_paste_content_existing(content_key, test_client):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("mode", ["", "/md"])
+@pytest.mark.parametrize("mode", ["", "/view"])
 @pytest.mark.parametrize("suffix", ["", ".md"])
 def test_markdown(content_key, test_client, mode, suffix):
     response = test_client.post("/", data={content_key: "abc", "mime": "text/markdown"})
@@ -152,20 +152,13 @@ def test_markdown(content_key, test_client, mode, suffix):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("mode", ["", "/rst"])
-def test_restructuredtext(content_key, test_client, mode):
+@pytest.mark.parametrize("mode", ["", "/view"])
+@pytest.mark.parametrize("suffix", ["", ".rst"])
+def test_restructuredtext(content_key, test_client, mode, suffix):
     response = test_client.post("/", data={content_key: "abc", "mime": "text/x-rst"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}{mode}")
-    assert response.status_code == 200
-
-
-def test_restructuredtext_with_extension(content_key, test_client):
-    response = test_client.post("/", data={content_key: "abc", "mime": "text/x-rst"})
-    j = json.loads(response.data.decode("utf-8"))
-    hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}.foo/rst")
+    response = test_client.get(f"/{hashid}{suffix}{mode}")
     assert response.status_code == 200
 
 
@@ -212,13 +205,14 @@ def test_text_mode_guess_type(content_key, test_client):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("ext", ["md", "rst", "txt"])
-def test_paste_highlight(content_key, test_client, ext):
+@pytest.mark.parametrize("mode", ["md", "rst"])
+def test_legacy_view_redirect(content_key, test_client, mode):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}.{ext}")
-    assert response.status_code == 200
+    response = test_client.get(f"/{hashid}/{mode}")
+    assert response.status_code == 301
+    assert response.location.endswith(f"/{hashid}.{mode}/view")
 
 
 def test_paste_not_text(content_key, test_client):
@@ -379,8 +373,8 @@ def test_get_extension_unknown(content_key, test_client):
     assert not response.content_type
 
 
-@pytest.mark.parametrize("extension", ["", "txt", "json", "unknown"])
-@pytest.mark.parametrize("mode", ["", "md", "raw", "rst", "text"])
+@pytest.mark.parametrize("extension", ["md", "rst"])
+@pytest.mark.parametrize("mode", ["", "raw", "text", "view"])
 def test_get_etag(content_key, test_client, extension, mode):
     response = test_client.post("/", data={content_key: "abc"})
     hashid = response.json["hashid"]
@@ -399,3 +393,11 @@ def test_get_etag(content_key, test_client, extension, mode):
     assert response.status_code == 304
     response = test_client.get(path, headers={"If-None-Match": "invalid"})
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize("extension", ["txt", "unknown"])
+def test_get_view_unknown_extension(content_key, test_client, extension):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.{extension}/view")
+    assert response.status_code == 400
