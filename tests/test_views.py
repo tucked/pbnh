@@ -312,6 +312,14 @@ def test_get_no_extension_dot(content_key, test_client):
     assert response.location.endswith(f"/{hashid}.txt")
 
 
+def test_get_no_extension_dot_slash(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}./")
+    assert response.status_code == 301
+    assert response.location.endswith(f"/{hashid}.txt/")
+
+
 def test_get_no_extension_slash(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc"})
     hashid = response.json["hashid"]

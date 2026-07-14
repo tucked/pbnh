@@ -231,6 +231,7 @@ def index() -> str:
 
 
 @blueprint.get("/<string:hashid>.")
+@blueprint.get("/<string:hashid>./")
 @blueprint.get("/<string:hashid>./<string:mode>")
 @blueprint.get("/<string:hashid>.<string:extension>")
 def retrieve_paste(
@@ -245,6 +246,8 @@ def retrieve_paste(
             suffix += f".{extension}"
         if mode:
             suffix += f"/{mode}"
+        elif request.path.endswith("/"):
+            suffix += "/"
         if suffix:
             return _redirect(f"/{hashid}{suffix}", 301)
     elif extension == "asciinema":
