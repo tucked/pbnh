@@ -31,4 +31,4 @@ types-docutils = {version = ">=0.18"}
 types-pyyaml = {version = ">=6.0"}
 
 [requires]
-python_version = "3.11"
+python_version = "3.14"
