@@ -29,7 +29,7 @@ docker pull tucked/pbnh:latest
 Before deploying, create a configuration file that tells the app _how_ to run:
 
 ``` sh
-edit sample_config.yml
+edit sample_config.yaml
 ```
 
 Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
@@ -71,7 +71,7 @@ Next, initialize the database:
 
 ``` sh
 docker run --interactive --tty \
-    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/sample_config.yaml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     tucked/pbnh:latest pipenv run flask --app pbnh db init
 ```
@@ -108,7 +108,7 @@ Finally, start the app:
 
 ``` sh
 docker run --interactive --tty \
-    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/sample_config.yaml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     --publish 12345:8000 \
     tucked/pbnh:latest
