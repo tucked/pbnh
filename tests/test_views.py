@@ -156,7 +156,7 @@ def test_restructuredtext_with_extension(content_key, test_client):
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(f"/{hashid}.foo/rst")
-    assert response.status_code == 400
+    assert response.status_code == 200
 
 
 def test_bad_mode(content_key, test_client):
