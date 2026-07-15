@@ -141,10 +141,10 @@ Alternatively, use the `bin/run.sh` script to build and run a development instan
 
 ### Testing
 
-To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yml`:
+To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yaml`:
 
 ``` sh
-docker compose -f docker-compose.test.yml run sut
+docker compose -f docker-compose.test.yaml run sut
 ```
 
 Note: This pattern is meant to be compatible with [automated repository testing on Docker Hub](https://docs.docker.com/docker-hub/builds/automated-testing/).
