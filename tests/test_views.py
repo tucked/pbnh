@@ -332,3 +332,11 @@ def test_get_raw_content_length(content_key, test_client):
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}/raw")
     assert "Content-Length" in response.headers
+
+
+def test_get_extension_unknown(content_key, test_client):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.unknown")
+    assert response.status_code == 200
+    assert not response.content_type
