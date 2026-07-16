@@ -316,7 +316,7 @@ def test_get_no_extension_unguessable_dot(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc", "mime": "fo/shizzle"})
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}.")
-    assert response.status_code == 422
+    assert response.status_code == 200
 
 
 def test_get_no_extension_unguessable_slash(content_key, test_client):

@@ -238,11 +238,9 @@ def redirect_to_mode(
 @blueprint.get("/<string:hashid>./<string:mode>")
 def redirect_to_raw(hashid: str, mode: str = "") -> flask.typing.ResponseReturnValue:
     paste = _get_paste(hashid)
-    suffix = mimetypes.guess_extension(paste["mime"], strict=False) or abort(
-        422,
-        "There is no extension associated with"
-        f" the paste's media type ({paste['mime']}).",
-    )
+    suffix = mimetypes.guess_extension(paste["mime"], strict=False)
+    if not suffix and not mode:
+        return _render_raw(hashid=hashid, paste=paste)
     location = f"/{hashid}{suffix}"
     if mode:
         location += f"/{mode}"
