@@ -44,7 +44,7 @@ def _guess_mime(url: str) -> str | None:
     return mimetypes.guess_type(url, strict=False)[0] or {
         ".cast": "application/x-asciicast",
         ".rst": "text/x-rst",  # https://github.com/python/cpython/issues/101137
-    }.get(Path(url).suffix)
+    }.get(Path(urllib.parse.urlsplit(url).path).suffix)
 
 
 def _mode_for_mime(mime: str) -> str:
@@ -119,7 +119,7 @@ def _render_raw(
 ) -> Response:
     if not paste:
         paste = _get_paste(hashid)
-    mime = _guess_mime(f"{hashid}.{extension}") if extension else paste["mime"]
+    mime = _guess_mime(request.url) if extension else paste["mime"]
     return Response(paste["data"], mimetype=mime or "")
 
 
@@ -267,6 +267,6 @@ def redirect_to_mode(
 ) -> flask.typing.ResponseReturnValue:
     """Redirect to a URL with an explicit mode."""
     paste = _get_paste(hashid)
-    mime = (_guess_mime(f"{hashid}.{extension}") or "") if extension else paste["mime"]
+    mime = (_guess_mime(request.url) or "") if extension else paste["mime"]
     mode = _mode_for_mime(mime)
     return _redirect(request.path + mode, 302)
