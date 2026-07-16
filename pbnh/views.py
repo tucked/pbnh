@@ -45,6 +45,10 @@ def _get_paste(hashid: str) -> dict[str, Any]:
         return paster.query(hashid=hashid) or abort(404)
 
 
+def _guess_extension(mime: str) -> str:
+    return (mimetypes.guess_extension(mime, strict=False) or "")[1:]
+
+
 def _guess_mime(url: str) -> str:
     return mimetypes.guess_type(url, strict=False)[0] or ""
 
@@ -149,8 +153,7 @@ def _render_text(
     **_: object,
 ) -> str:
     if not extension:
-        mime = (paste or _get_paste(hashid))["mime"]
-        extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:]
+        extension = _guess_extension((paste or _get_paste(hashid))["mime"])
     return render_template("editor.html.jinja", url=f"/{hashid}.{extension}")
 
 
@@ -236,7 +239,10 @@ def retrieve_paste(
     """Retrieve a paste."""
     paste = _get_paste(hashid)
     if not extension:
-        suffix = mimetypes.guess_extension(paste["mime"], strict=False) or ""
+        extension = _guess_extension(paste["mime"])
+        suffix = ""
+        if extension:
+            suffix += f".{extension}"
         if mode:
             suffix += f"/{mode}"
         if suffix:
