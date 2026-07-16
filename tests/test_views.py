@@ -317,7 +317,7 @@ def test_get_no_extension_slash(content_key, test_client):
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}/")
     assert response.status_code == 301
-    assert response.location == f"/{hashid}/text"
+    assert response.location.endswith(f"/{hashid}/text")
 
 
 def test_get_no_extension_unguessable_dot(content_key, test_client):
@@ -332,7 +332,7 @@ def test_get_no_extension_unguessable_slash(content_key, test_client):
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}/")
     assert response.status_code == 301
-    assert response.location == f"/{hashid}/raw"
+    assert response.location.endswith(f"/{hashid}/raw")
 
 
 def test_get_raw_content_length(content_key, test_client):

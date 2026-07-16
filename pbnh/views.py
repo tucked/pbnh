@@ -1,6 +1,7 @@
 import functools
 import json
 import mimetypes
+import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -58,6 +59,14 @@ def _mode_for_mime(mime: str) -> str:
     if mime in {"application/asciicast+json", "application/x-asciicast"}:
         return "cast"
     return "raw"
+
+
+def _redirect(path: str, *args: Any, **kwargs: Any) -> flask.typing.ResponseReturnValue:
+    return redirect(
+        urllib.parse.urlsplit(request.url)._replace(path=path).geturl(),
+        *args,
+        **kwargs,
+    )
 
 
 def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
@@ -223,14 +232,16 @@ def retrieve_paste(
     """Retrieve a paste."""
     paste = _get_paste(hashid)
     if not extension:
-        suffix = mimetypes.guess_extension(paste["mime"], strict=False)
-        if suffix or mode:
-            return redirect(request.url.replace(f"{hashid}.", f"{hashid}{suffix}"), 301)
+        suffix = mimetypes.guess_extension(paste["mime"], strict=False) or ""
+        if mode:
+            suffix += f"/{mode}"
+        if suffix:
+            return _redirect(f"/{hashid}{suffix}", 301)
     elif extension == "asciinema":
         # .asciinema is a legacy pbnh thing...
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
-        return redirect(request.url.replace(".asciinema", "/cast"), 301)
+        return _redirect(f"/{hashid}/cast", 301)
     return _render_raw(hashid=hashid, extension=extension, paste=paste)
 
 
@@ -256,7 +267,7 @@ def redirect_to_mode(
 ) -> flask.typing.ResponseReturnValue:
     """Redirect to a URL with an explicit mode."""
     if extension:
-        return redirect(f"/{hashid}.{extension}/raw", 301)
+        return _redirect(f"/{hashid}.{extension}/raw", 301)
     paste = _get_paste(hashid)
     mode = _mode_for_mime(paste["mime"])
-    return redirect(f"/{hashid}/{mode}", 301)
+    return _redirect(f"/{hashid}/{mode}", 301)
