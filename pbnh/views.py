@@ -16,6 +16,11 @@ from pbnh import db
 blueprint = Blueprint("views", __name__)
 REDIRECT_MIME = "text/x.pbnh.redirect"
 
+# https://github.com/asciinema/asciinema/issues/224
+mimetypes.add_type("application/x-asciicast", ".cast", strict=False)
+# https://github.com/python/cpython/issues/101137
+mimetypes.add_type("text/x-rst", ".rst", strict=False)
+
 
 def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
     try:
@@ -41,10 +46,7 @@ def _get_paste(hashid: str) -> dict[str, Any]:
 
 
 def _guess_mime(url: str) -> str:
-    return mimetypes.guess_type(url, strict=False)[0] or {
-        ".cast": "application/x-asciicast",
-        ".rst": "text/x-rst",  # https://github.com/python/cpython/issues/101137
-    }.get(Path(urllib.parse.urlsplit(url).path).suffix) or ""
+    return mimetypes.guess_type(url, strict=False)[0] or ""
 
 
 def _mode_for_mime(mime: str) -> str:
