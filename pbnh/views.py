@@ -108,16 +108,10 @@ def _render_raw(
     paste: dict[str, Any] | None = None,
     **_: object,
 ) -> Response:
-    mime = ""
-    if extension:
-        mime = _guess_mime(f"/{hashid}.{extension}") or abort(
-            400,
-            "There is no media type associated with"
-            f" the provided extension (.{extension}).",
-        )
     if not paste:
         paste = _get_paste(hashid)
-    return Response(paste["data"], mimetype=mime or paste["mime"])
+    mime = _guess_mime(f"{hashid}.{extension}") if extension else paste["mime"]
+    return Response(paste["data"], mimetype=mime or "")
 
 
 def _render_redirect(
