@@ -46,18 +46,6 @@
             <li id="saveicon" title="Save (ctrl+s)"><span class="fa fa-save fa-lg"></span></li>
             {%- endif %}
         </ul>
-        {%- if not read_only %}
-        <div id="lightbox" style="
-            visibility: hidden;
-            position: absolute;
-            z-index: 100;
-            ">
-            <form action="/" method="post">
-                <input type="text" name='redirect'><br>
-                <input type="submit" value="Submit a url to redirect to. Must include http://">
-            </form>
-        </div>
-        {%- endif %}
         <script type="module">
             import { createEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
 
@@ -78,13 +66,8 @@
             helpicon.addEventListener("click", () => window.location.href = "/about");
             newicon.addEventListener("click", () => window.location.href = "/");
             {%- if not read_only %}
-            redirecticon.addEventListener('click', function () {
-                var lightbox = document.getElementById("lightbox");
-                lightbox.style.visibility = 'visible';
-                lightbox.style.top = window.innerHeight / 2 - 50 + 'px';
-                lightbox.style.left = window.innerWidth / 2 - 100 + 'px';
-            });
-            saveicon.addEventListener('click', function () {
+
+            function savePaste(key) {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
@@ -92,10 +75,28 @@
                     }
                 };
                 var myForm = new FormData();
-                myForm.append("content", editor.getValue());
+                myForm.append(key, window.editor.getValue());
                 xhttp.open("POST", "/");
                 xhttp.send(myForm);
+            }
+
+            redirecticon.addEventListener("click", () => {
+                const url = window.editor.getValue().trim();
+                if (!url) {
+                    alert("Please enter a URL to redirect to.");
+                    return;
+                }
+                try {
+                    new URL(url);
+                } catch {
+                    alert("The redirect URL does not appear to be valid.");
+                    return;
+                }
+                if (confirm("Create a paste that redirects to the URL below?\n\n" + url)) {
+                    savePaste("redirect");
+                }
             });
+            saveicon.addEventListener("click", () => savePaste("content"));
             {%- endif %}
         </script>
     </body>
