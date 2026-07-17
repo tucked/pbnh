@@ -54,7 +54,12 @@
             window.editor = createEditor({
                 parent: document.getElementById('editor-container'),
                 url: {{ url|default('')|tojson }},
-                onSave: function() { saveicon.click(); },
+                onKeyDown: (event) => {
+                    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+                        event.preventDefault();
+                        saveicon.click();
+                    }
+                },
             });
             editor.focus();
 
