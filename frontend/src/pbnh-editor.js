@@ -32,6 +32,7 @@ export function createEditor({
   parent,
   url = "",
   onKeyDown,
+  onLoad,
 } = {}) {
   let doc = "";
   let mime = "";
@@ -62,6 +63,8 @@ export function createEditor({
       EditorView.theme({ "&": { height: "100%" } }),
     ],
   });
+
+  if (onLoad) onLoad();
 
   if (filename || mime) {
     const description = findLanguage(filename, mime);
