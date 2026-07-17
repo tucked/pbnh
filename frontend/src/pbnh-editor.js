@@ -4,8 +4,6 @@ import { LanguageDescription } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { monokai } from "@uiw/codemirror-theme-monokai";
 
-const languageCompartment = new Compartment();
-
 function findLanguage(filename, mime) {
   if (filename) {
     const byExtension = LanguageDescription.matchFilename(languages, filename);
@@ -22,72 +20,78 @@ function findLanguage(filename, mime) {
 }
 
 /**
- * Create a CodeMirror 6 editor and mount it under `parent`.
- *
- * Returns a small wrapper object exposing the handful of CodeMirror 5
- * APIs that the surrounding templates rely on (getValue),
- * plus the raw EditorView as `view` for anything more advanced.
+ * Text editor used by pbnh.
  */
-export function createEditor({
-  parent,
-  url = "",
-  onKeyDown,
-  onLoad,
-} = {}) {
-  let doc = "";
-  let mime = "";
-  let filename = "";
-  if (url) {
-    const xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", url, false);
-    xmlhttp.send();
-    doc = xmlhttp.responseText;
-    mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
-    filename = new URL(url, window.location.href).pathname;
-  }
+export class PbnhEditor {
+  #languageCompartment = new Compartment();
+  #view;
 
-  const view = new EditorView({
-    parent,
-    doc,
-    extensions: [
-      basicSetup,
-      monokai,
-      EditorView.domEventHandlers({
-        keydown: (event, view) => {
-          onKeyDown?.(event);
-          return false;
-        },
-      }),
-      languageCompartment.of([]),
-      EditorState.readOnly.of(!!url),
-      EditorView.theme({ "&": { height: "100%" } }),
-    ],
-  });
+  constructor({ parent, url, onKeyDown, onLoad } = {}) {
+    let doc = "";
+    let mime = "";
+    let filename = "";
+    if (url) {
+      const xmlhttp = new XMLHttpRequest();
+      xmlhttp.open("GET", url, false);
+      xmlhttp.send();
+      doc = xmlhttp.responseText;
+      mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
+      filename = new URL(url, window.location.href).pathname;
+    }
 
-  if (onLoad) onLoad();
+    // Make `view` private to keep CodeMirror as an implementation detail.
+    this.#view = new EditorView({
+      parent,
+      doc,
+      extensions: [
+        basicSetup,
+        monokai,
+        EditorView.domEventHandlers({
+          keydown: (event, view) => {
+            onKeyDown?.(event);
+            return false;
+          },
+        }),
+        this.#languageCompartment.of([]),
+        EditorState.readOnly.of(!!url),
+        EditorView.theme({ "&": { height: "100%" } }),
+      ],
+    });
 
-  if (filename || mime) {
-    const description = findLanguage(filename, mime);
-    if (description) {
-      console.log(description.name);
-      description
-        .load()
-        .then((support) => {
-          view.dispatch({
-            effects: languageCompartment.reconfigure(support),
+    if (onLoad) onLoad();
+
+    if (filename || mime) {
+      const description = findLanguage(filename, mime);
+      if (description) {
+        console.log(description.name);
+        description
+          .load()
+          .then((support) => {
+            this.#view.dispatch({
+              effects: this.#languageCompartment.reconfigure(support),
+            });
+          })
+          .catch((err) => {
+            console.warn("could not load the language support for", description.name, err);
           });
-        })
-        .catch((err) => {
-          console.warn("could not load the language support for", description.name, err);
-        });
-    } else {
-      console.warn("could not find the right highlighter");
+      } else {
+        console.warn("could not find the right highlighter");
+      }
     }
   }
 
-  return {
-    view,
-    getValue: () => view.state.doc.toString(),
-    focus: () => view.focus(),
-  };
+  /**
+   * Get the current document content.
+   * @returns {string} The document content.
+   */
+  getValue() {
+    return this.#view.state.doc.toString();
+  }
+
+  /**
+   * Focus the editor.
+   */
+  focus() {
+    this.#view.focus();
+  }
 }

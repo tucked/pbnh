@@ -47,9 +47,9 @@
             {%- endif %}
         </ul>
         <script type="module">
-            import { createEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
+            import { PbnhEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
 
-            window.editor = createEditor({
+            window.editor = new PbnhEditor({
                 parent: document.querySelector("main"),
                 url: {{ url|default('')|tojson }},
                 {%- if not read_only %}
