@@ -27,6 +27,7 @@ conf="$(dirname "$db")/pbnh-$USER.yaml"
 # Create a gunicorn config file, if necessary:
 gunicorn_conf="$(dirname "$db")/pbnh-$USER-gunicorn.conf.py"
 [ -e "$gunicorn_conf" ] || {
+    echo 'keepalive = 0'
     echo 'loglevel = "debug"'
 } > "$gunicorn_conf"
 
