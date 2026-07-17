@@ -62,7 +62,7 @@
                 {%- endif %}
                 onLoad: () => { document.getElementById("loading-message").remove(); },
             });
-            editor.focus();
+            window.editor.focus();
 
             // Toolbar
             helpicon.addEventListener("click", () => window.location.href = "/about");
