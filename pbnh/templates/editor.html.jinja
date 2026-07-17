@@ -70,12 +70,9 @@
             });
             editor.focus();
 
-            newicon.addEventListener("click", function () {
-                window.location.href = '/';
-            });
-            helpicon.addEventListener("click", function () {
-                window.location.href = '/about';
-            });
+            // Toolbar
+            helpicon.addEventListener("click", () => window.location.href = "/about");
+            newicon.addEventListener("click", () => window.location.href = "/");
             redirecticon.addEventListener('click', function () {
                 var lightbox = document.getElementById("lightbox");
                 lightbox.style.visibility = 'visible';
