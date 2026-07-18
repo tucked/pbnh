@@ -16,6 +16,10 @@
             #editor-container {
                 flex: 1;
             }
+            #loading-message {
+                font-family: sans-serif;
+                text-align: center;
+            }
             #toolbar {
                 display: flex;
                 flex-direction: column;
@@ -31,7 +35,9 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='dist/font-awesome/css/font-awesome.min.css') }}">
     </head>
     <body>
-        <div id="editor-container"></div>
+        <div id="editor-container">
+            <p id="loading-message">loading...</p>
+        </div>
         <ul id="toolbar">
             <li id="helpicon" title="About"><span class="fa fa-question fa-lg"></span></li>
             <li id="newicon" title="New Paste"><span class="fa fa-file-o fa-lg"></span></li>
@@ -60,6 +66,7 @@
                         saveicon.click();
                     }
                 },
+                onLoad: () => { document.getElementById("loading-message").remove(); },
             });
             editor.focus();
 
@@ -75,30 +82,20 @@
                 lightbox.style.top = window.innerHeight / 2 - 50 + 'px';
                 lightbox.style.left = window.innerWidth / 2 - 100 + 'px';
             });
+            {% if not read_only %}
+            saveicon.addEventListener('click', function () {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
+                        window.location.href = JSON.parse(xhttp.responseText).link + ".txt";
+                    }
+                };
+                var myForm = new FormData();
+                myForm.append("content", editor.getValue());
+                xhttp.open("POST", "/");
+                xhttp.send(myForm);
+            });
+            {% endif %}
         </script>
-        {% if read_only %}
-        <h1 id="loading-message" style="color:white;">If you are seeing this your paste is really big and
-            is taking a while to load. You can always add .&#60;extension&#62;to the
-            end of it to load the paste directly to the browser with the correct
-            mimetype</h1>
-        <script type="module">
-        document.getElementById('loading-message')?.remove();
-        </script>
-        {% else %}
-        <script type="module">
-        saveicon.addEventListener('click', function () {
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
-                    window.location.href = JSON.parse(xhttp.responseText).link + ".txt";
-                }
-            };
-            var myForm = new FormData();
-            myForm.append("content", editor.getValue());
-            xhttp.open("POST", "/");
-            xhttp.send(myForm);
-        });
-        </script>
-        {% endif %}
     </body>
 </html>
