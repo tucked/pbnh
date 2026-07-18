@@ -14,11 +14,15 @@
                 display: flex;
             }
             main {
+                position: relative;
                 flex: 1;
             }
-            #loading-message {
-                font-family: sans-serif;
-                text-align: center;
+            #loading {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
             }
             #toolbar {
                 display: flex;
@@ -36,7 +40,7 @@
     </head>
     <body>
         <main>
-            <p id="loading-message">loading...</p>
+            <span id="loading" class="fa fa-spinner fa-lg"></span>
         </main>
         <ul id="toolbar">
             <li id="helpicon" title="About"><span class="fa fa-question fa-lg"></span></li>
@@ -60,7 +64,7 @@
                     }
                 },
                 {%- endif %}
-                onLoad: () => { document.getElementById("loading-message").remove(); },
+                onLoad: () => { document.getElementById("loading").remove(); },
             });
             window.editor.focus();
 
