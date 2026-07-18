@@ -43,11 +43,11 @@
             <span id="loading" class="fa fa-spinner fa-lg"></span>
         </main>
         <ul id="toolbar">
-            <li id="helpicon" title="About"><span class="fa fa-question fa-lg"></span></li>
-            <li id="newicon" title="New Paste"><span class="fa fa-file-o fa-lg"></span></li>
+            <li id="about" title="About"><span class="fa fa-question fa-lg"></span></li>
+            <li id="new" title="New Paste"><span class="fa fa-file-o fa-lg"></span></li>
             {%- if not read_only %}
-            <li id="redirecticon" title="Save as Redirect"><span class="fa fa-external-link fa-lg"></span></li>
-            <li id="saveicon" title="Save (ctrl+s)"><span class="fa fa-save fa-lg"></span></li>
+            <li id="redirect" title="Save as Redirect"><span class="fa fa-external-link fa-lg"></span></li>
+            <li id="save" title="Save (ctrl+s)"><span class="fa fa-save fa-lg"></span></li>
             {%- endif %}
         </ul>
         <script type="module">
@@ -60,7 +60,7 @@
                 onKeyDown: (event) => {
                     if ((event.ctrlKey || event.metaKey) && event.key === "s") {
                         event.preventDefault();
-                        saveicon.click();
+                        document.getElementById("save").click();
                     }
                 },
                 {%- endif %}
@@ -69,8 +69,8 @@
             window.editor.focus();
 
             // Toolbar
-            helpicon.addEventListener("click", () => window.location.href = "/about");
-            newicon.addEventListener("click", () => window.location.href = "/");
+            document.getElementById("about").addEventListener("click", () => window.location.href = "/about");
+            document.getElementById("new").addEventListener("click", () => window.location.href = "/");
             {%- if not read_only %}
 
             function savePaste(key) {
@@ -86,7 +86,7 @@
                 xhttp.send(myForm);
             }
 
-            redirecticon.addEventListener("click", () => {
+            document.getElementById("redirect").addEventListener("click", () => {
                 const url = window.editor.getValue().trim();
                 if (!url) {
                     alert("Please enter a URL to redirect to.");
@@ -102,7 +102,7 @@
                     savePaste("redirect");
                 }
             });
-            saveicon.addEventListener("click", () => savePaste("content"));
+            document.getElementById("save").addEventListener("click", () => savePaste("content"));
             {%- endif %}
         </script>
     </body>
