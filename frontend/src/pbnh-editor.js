@@ -1,6 +1,5 @@
 import { basicSetup, EditorView } from "codemirror";
 import { EditorState, Compartment } from "@codemirror/state";
-import { keymap } from "@codemirror/view";
 import { LanguageDescription } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { monokai } from "@uiw/codemirror-theme-monokai";
@@ -32,33 +31,8 @@ function findLanguage(filename, mime) {
 export function createEditor({
   parent,
   url = "",
-  onSave,
-  onNew,
+  onKeyDown,
 } = {}) {
-  const extraKeys = [];
-  if (onSave) {
-    extraKeys.push({
-      key: "Ctrl-s",
-      mac: "Cmd-s",
-      preventDefault: true,
-      run: () => {
-        onSave();
-        return true;
-      },
-    });
-  }
-  if (onNew) {
-    extraKeys.push({
-      key: "Ctrl-n",
-      mac: "Cmd-n",
-      preventDefault: true,
-      run: () => {
-        onNew();
-        return true;
-      },
-    });
-  }
-
   let doc = "";
   let mime = "";
   let filename = "";
@@ -77,7 +51,12 @@ export function createEditor({
     extensions: [
       basicSetup,
       monokai,
-      keymap.of(extraKeys),
+      EditorView.domEventHandlers({
+        keydown: (event, view) => {
+          onKeyDown?.(event);
+          return false;
+        },
+      }),
       languageCompartment.of([]),
       EditorState.readOnly.of(!!url),
       EditorView.theme({ "&": { height: "100%" } }),
