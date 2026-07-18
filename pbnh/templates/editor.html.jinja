@@ -52,12 +52,14 @@
             window.editor = createEditor({
                 parent: document.getElementById('editor-container'),
                 url: {{ url|default('')|tojson }},
+                {%- if not read_only %}
                 onKeyDown: (event) => {
                     if ((event.ctrlKey || event.metaKey) && event.key === "s") {
                         event.preventDefault();
                         saveicon.click();
                     }
                 },
+                {%- endif %}
                 onLoad: () => { document.getElementById("loading-message").remove(); },
             });
             editor.focus();
