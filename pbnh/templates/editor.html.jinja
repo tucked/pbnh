@@ -41,9 +41,12 @@
         <ul id="toolbar">
             <li id="helpicon" title="About"><span class="fa fa-question fa-lg"></span></li>
             <li id="newicon" title="New Paste"><span class="fa fa-file-o fa-lg"></span></li>
+            {%- if not read_only %}
             <li id="redirecticon" title="Save as Redirect"><span class="fa fa-external-link fa-lg"></span></li>
             <li id="saveicon" title="Save (ctrl+s)"><span class="fa fa-save fa-lg"></span></li>
+            {%- endif %}
         </ul>
+        {%- if not read_only %}
         <div id="lightbox" style="
             visibility: hidden;
             position: absolute;
@@ -54,6 +57,7 @@
                 <input type="submit" value="Submit a url to redirect to. Must include http://">
             </form>
         </div>
+        {%- endif %}
         <script type="module">
             import { createEditor } from "{{ url_for('static', filename='dist/pbnh-editor.js') }}";
 
@@ -70,19 +74,16 @@
             });
             editor.focus();
 
-            newicon.addEventListener("click", function () {
-                window.location.href = '/';
-            });
-            helpicon.addEventListener("click", function () {
-                window.location.href = '/about';
-            });
+            // Toolbar
+            helpicon.addEventListener("click", () => window.location.href = "/about");
+            newicon.addEventListener("click", () => window.location.href = "/");
+            {%- if not read_only %}
             redirecticon.addEventListener('click', function () {
                 var lightbox = document.getElementById("lightbox");
                 lightbox.style.visibility = 'visible';
                 lightbox.style.top = window.innerHeight / 2 - 50 + 'px';
                 lightbox.style.left = window.innerWidth / 2 - 100 + 'px';
             });
-            {% if not read_only %}
             saveicon.addEventListener('click', function () {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
@@ -95,7 +96,7 @@
                 xhttp.open("POST", "/");
                 xhttp.send(myForm);
             });
-            {% endif %}
+            {%- endif %}
         </script>
     </body>
 </html>

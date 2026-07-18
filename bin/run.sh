@@ -26,10 +26,15 @@ conf="$(dirname "$db")/pbnh-$USER.yaml"
 
 # Create a gunicorn config file, if necessary:
 gunicorn_conf="$(dirname "$db")/pbnh-$USER-gunicorn.conf.py"
-[ -e "$gunicorn_conf" ] || {
-    echo 'keepalive = 0'
-    echo 'loglevel = "debug"'
-} > "$gunicorn_conf"
+[ -e "$gunicorn_conf" ] || cat > "$gunicorn_conf" <<'EOF'
+# Gunicorn configuration for pbnh development.
+# Use gthread with a small thread pool so Edge's idle/pre-warmed
+# connections don't block the only sync worker.
+worker_class = "gthread"
+threads = 4
+keepalive = 2
+loglevel = "debug"
+EOF
 
 # Clean up any past runs and start the app:
 container='pbnh_dev'
