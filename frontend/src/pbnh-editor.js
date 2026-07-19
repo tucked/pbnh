@@ -46,15 +46,15 @@ export class PbnhEditor {
       extensions: [
         basicSetup,
         monokai,
+        this.#languageCompartment.of([]),
+        EditorState.readOnly.of(!!url),
+        EditorView.theme({ "&": { height: "100%" } }),
         EditorView.domEventHandlers({
           keydown: (event, view) => {
             onKeyDown?.(event);
             return false;
           },
         }),
-        this.#languageCompartment.of([]),
-        EditorState.readOnly.of(!!url),
-        EditorView.theme({ "&": { height: "100%" } }),
       ],
     });
 
