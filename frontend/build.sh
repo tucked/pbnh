@@ -14,7 +14,8 @@ node_modules="$here/node_modules"
 cp "$node_modules/asciinema-player/dist/bundle/asciinema-player.min.js" "$outdir/asciinema-player.min.js"
 cp "$node_modules/asciinema-player/dist/bundle/asciinema-player.css" "$outdir/asciinema-player.css"
 
-# Font Awesome (icon font used via `fa fa-*` classes in templates)
-mkdir -p "$outdir/font-awesome"
-cp -r "$node_modules/font-awesome/css" "$outdir/font-awesome/css"
-cp -r "$node_modules/font-awesome/fonts" "$outdir/font-awesome/fonts"
+# Lucide (static SVGs)
+mkdir -p "$outdir/lucide/icons"
+for icon in loader circle-help file-plus external-link save; do
+  cp "$node_modules/lucide-static/icons/$icon.svg" "$outdir/lucide/icons/$icon.svg"
+done

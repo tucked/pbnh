@@ -4,7 +4,7 @@ A [Content-Addressed](https://en.wikipedia.org/wiki/Content-addressable_storage)
 
 - Syntax Highlighting by [CodeMirror](https://github.com/codemirror/codemirror)
 - Asciicast Rendering with [asciinema player](https://github.com/asciinema/asciinema-player)
-- Icons from [Font Awesome](https://github.com/FortAwesome/Font-Awesome)
+- Icons from [Lucide](https://github.com/lucide-icons/lucide)
 - and more!
 
 It is highly derived from [silverp1](https://github.com/silverp1)'s and [buhman](https://github.com/buhman)'s project [pb](https://github.com/ptpb/pb), and they deserve recognition for this idea.

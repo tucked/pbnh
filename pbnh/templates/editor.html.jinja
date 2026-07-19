@@ -32,22 +32,56 @@
                 margin: 0;
                 padding: 1rem;
             }
-            #toolbar li {
+            #toolbar a, #toolbar button {
+                background: none;
+                border: 0;
+                padding: 0;
                 cursor: pointer;
+                text-decoration: none;
+            }
+            .icon {
+                width: 1.5rem;
+                height: 1.5rem;
+                display: inline-block;
+                vertical-align: middle;
+                filter: invert(1);
+            }
+            .spin {
+                animation: spin 1s linear infinite;
+                transform-origin: center;
+            }
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
             }
         </style>
-        <link rel="stylesheet" href="{{ url_for('static', filename='dist/font-awesome/css/font-awesome.min.css') }}">
     </head>
     <body>
         <main>
-            <span id="loading" class="fa fa-spinner fa-lg"></span>
+            <img id="loading" class="icon spin" src="{{ url_for('static', filename='dist/lucide/icons/loader.svg') }}" alt="">
         </main>
         <ul id="toolbar">
-            <li id="about" title="About"><span class="fa fa-question fa-lg"></span></li>
-            <li id="new" title="New Paste"><span class="fa fa-file-o fa-lg"></span></li>
+            <li>
+                <a id="about" href="/about" title="About">
+                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/circle-help.svg') }}" alt="">
+                </a>
+            </li>
+            <li>
+                <a id="new" href="/" title="New Paste">
+                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/file-plus.svg') }}" alt="">
+                </a>
+            </li>
             {%- if not read_only %}
-            <li id="redirect" title="Save as Redirect"><span class="fa fa-external-link fa-lg"></span></li>
-            <li id="save" title="Save (ctrl+s)"><span class="fa fa-save fa-lg"></span></li>
+            <li>
+                <button id="redirect" type="button" title="Save as Redirect">
+                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/external-link.svg') }}" alt="">
+                </button>
+            </li>
+            <li>
+                <button id="save" type="button" title="Save (ctrl+s)">
+                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/save.svg') }}" alt="">
+                </button>
+            </li>
             {%- endif %}
         </ul>
         <script type="module">
@@ -68,9 +102,6 @@
             });
             window.editor.focus();
 
-            // Toolbar
-            document.getElementById("about").addEventListener("click", () => window.location.href = "/about");
-            document.getElementById("new").addEventListener("click", () => window.location.href = "/");
             {%- if not read_only %}
 
             function savePaste(key) {
