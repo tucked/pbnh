@@ -63,7 +63,7 @@ export class PbnhEditor {
     if (filename || mime) {
       const description = findLanguage(filename, mime);
       if (description) {
-        console.log(description.name);
+        console.info(`Language: ${description.name}`);
         description
           .load()
           .then((support) => {
@@ -72,10 +72,12 @@ export class PbnhEditor {
             });
           })
           .catch((err) => {
-            console.warn("could not load the language support for", description.name, err);
+            console.error(`Loading the ${description.name} highlighter failed!`, err);
           });
       } else {
-        console.warn("could not find the right highlighter");
+        let target = filename || mime;
+        if (filename && mime) target += " (" + mime + ")";
+        console.warn(`An appropriate highlighter for ${target} could not be found.`);
       }
     }
   }
