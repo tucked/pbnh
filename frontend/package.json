@@ -7,10 +7,10 @@
     "@codemirror/language": "^6.11.3",
     "@codemirror/language-data": "^6.5.1",
     "@codemirror/state": "^6.5.2",
-    "@fortawesome/fontawesome-free": "^7.3.1",
     "@uiw/codemirror-theme-monokai": "^4.25.7",
     "asciinema-player": "^3.11.0",
-    "codemirror": "^6.0.2"
+    "codemirror": "^6.0.2",
+    "lucide-static": "^1.25.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"
