@@ -6,15 +6,19 @@ import { monokai } from "@uiw/codemirror-theme-monokai";
 
 function findLanguage(filename, mime) {
   if (filename) {
-    const byExtension = LanguageDescription.matchFilename(languages, filename);
-    if (byExtension) return byExtension;
+    const byFilename = LanguageDescription.matchFilename(languages, filename);
+    if (byFilename) return byFilename;
   }
   if (mime) {
-    const subtype = mime.split("/").pop().replace(/^(x-|vnd\.)/, "");
-    const byMime = LanguageDescription.matchLanguageName(languages, subtype, true);
-    if (byMime) {
-      return byMime;
-    }
+    const name = mime
+      .split("/")
+      .pop()
+      .replace(/^(x-|vnd\.)/i, "")
+      .split(/[+\.]/)
+      .pop()
+      .trim();
+    const byMime = LanguageDescription.matchLanguageName(languages, name, true);
+    if (byMime) return byMime;
   }
   return null;
 }
