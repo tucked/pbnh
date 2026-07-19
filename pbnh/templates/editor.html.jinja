@@ -117,16 +117,11 @@
             window.editor.focus();
 
             function savePaste(key) {
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
-                    if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
-                        window.location.href = JSON.parse(xhttp.responseText).link + ".txt";
-                    }
-                };
-                var myForm = new FormData();
-                myForm.append(key, window.editor.getValue());
-                xhttp.open("POST", "/");
-                xhttp.send(myForm);
+                const form = new FormData();
+                form.append(key, window.editor.getValue());
+                fetch("/", { method: "POST", body: form })
+                    .then(response => response.ok ? response.text() : "")
+                    .then(text => { if (text) window.location.href = JSON.parse(text).link + ".txt"; });
             }
 
             document.getElementById("redirect").addEventListener("click", () => {
