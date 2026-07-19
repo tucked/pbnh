@@ -4,90 +4,100 @@ import { LanguageDescription } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { monokai } from "@uiw/codemirror-theme-monokai";
 
-const languageCompartment = new Compartment();
-
 function findLanguage(filename, mime) {
   if (filename) {
-    const byExtension = LanguageDescription.matchFilename(languages, filename);
-    if (byExtension) return byExtension;
+    const byFilename = LanguageDescription.matchFilename(languages, filename);
+    if (byFilename) return byFilename;
   }
   if (mime) {
-    const subtype = mime.split("/").pop().replace(/^(x-|vnd\.)/, "");
-    const byMime = LanguageDescription.matchLanguageName(languages, subtype, true);
-    if (byMime) {
-      return byMime;
-    }
+    const name = mime
+      .split("/")
+      .pop()
+      .replace(/^(x-|vnd\.)/i, "")
+      .split(/[+\.]/)
+      .pop()
+      .trim();
+    const byMime = LanguageDescription.matchLanguageName(languages, name, true);
+    if (byMime) return byMime;
   }
   return null;
 }
 
 /**
- * Create a CodeMirror 6 editor and mount it under `parent`.
- *
- * Returns a small wrapper object exposing the handful of CodeMirror 5
- * APIs that the surrounding templates rely on (getValue),
- * plus the raw EditorView as `view` for anything more advanced.
+ * Text editor used by pbnh.
  */
-export function createEditor({
-  parent,
-  url = "",
-  onKeyDown,
-  onLoad,
-} = {}) {
-  let doc = "";
-  let mime = "";
-  let filename = "";
-  if (url) {
-    const xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", url, false);
-    xmlhttp.send();
-    doc = xmlhttp.responseText;
-    mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
-    filename = new URL(url, window.location.href).pathname;
-  }
+export class PbnhEditor {
+  #languageCompartment = new Compartment();
+  #view;
 
-  const view = new EditorView({
-    parent,
-    doc,
-    extensions: [
-      basicSetup,
-      monokai,
-      EditorView.domEventHandlers({
-        keydown: (event, view) => {
-          onKeyDown?.(event);
-          return false;
-        },
-      }),
-      languageCompartment.of([]),
-      EditorState.readOnly.of(!!url),
-      EditorView.theme({ "&": { height: "100%" } }),
-    ],
-  });
+  constructor({ parent, url, onKeyDown, onLoad } = {}) {
+    let doc = "";
+    let mime = "";
+    let filename = "";
+    if (url) {
+      const xmlhttp = new XMLHttpRequest();
+      xmlhttp.open("GET", url, false);
+      xmlhttp.send();
+      doc = xmlhttp.responseText;
+      mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
+      filename = new URL(url, window.location.href).pathname;
+    }
 
-  if (onLoad) onLoad();
+    // Make `view` private to keep CodeMirror as an implementation detail.
+    this.#view = new EditorView({
+      parent,
+      doc,
+      extensions: [
+        basicSetup,
+        monokai,
+        this.#languageCompartment.of([]),
+        EditorState.readOnly.of(!!url),
+        EditorView.theme({ "&": { height: "100%" } }),
+        EditorView.domEventHandlers({
+          keydown: (event, view) => {
+            onKeyDown?.(event);
+            return false;
+          },
+        }),
+      ],
+    });
 
-  if (filename || mime) {
-    const description = findLanguage(filename, mime);
-    if (description) {
-      console.log(description.name);
-      description
-        .load()
-        .then((support) => {
-          view.dispatch({
-            effects: languageCompartment.reconfigure(support),
+    if (onLoad) onLoad();
+
+    if (filename || mime) {
+      const description = findLanguage(filename, mime);
+      if (description) {
+        console.info(`Language: ${description.name}`);
+        description
+          .load()
+          .then((support) => {
+            this.#view.dispatch({
+              effects: this.#languageCompartment.reconfigure(support),
+            });
+          })
+          .catch((err) => {
+            console.error(`Loading the ${description.name} highlighter failed!`, err);
           });
-        })
-        .catch((err) => {
-          console.warn("could not load the language support for", description.name, err);
-        });
-    } else {
-      console.warn("could not find the right highlighter");
+      } else {
+        let target = filename || mime;
+        if (filename && mime) target += " (" + mime + ")";
+        console.warn(`An appropriate highlighter for ${target} could not be found.`);
+      }
     }
   }
 
-  return {
-    view,
-    getValue: () => view.state.doc.toString(),
-    focus: () => view.focus(),
-  };
+  /**
+   * Get the current document content.
+   * @returns {string} The document content.
+   */
+  getValue() {
+    return this.#view.state.doc.toString();
+  }
+
+  /**
+   * Focus the editor.
+   */
+  focus() {
+    this.#view.focus();
+  }
 }
