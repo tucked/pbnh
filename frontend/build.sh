@@ -14,7 +14,7 @@ node_modules="$here/node_modules"
 cp "$node_modules/asciinema-player/dist/bundle/asciinema-player.min.js" "$outdir/asciinema-player.min.js"
 cp "$node_modules/asciinema-player/dist/bundle/asciinema-player.css" "$outdir/asciinema-player.css"
 
-# Font Awesome (icon font used via `fa fa-*` classes in templates)
+# Font Awesome (icon font used via CSS classes in templates)
 mkdir -p "$outdir/font-awesome"
-cp -r "$node_modules/font-awesome/css" "$outdir/font-awesome/css"
-cp -r "$node_modules/font-awesome/fonts" "$outdir/font-awesome/fonts"
+cp -r "$node_modules/@fortawesome/fontawesome-free/css" "$outdir/font-awesome/css"
+cp -r "$node_modules/@fortawesome/fontawesome-free/webfonts" "$outdir/font-awesome/webfonts"
