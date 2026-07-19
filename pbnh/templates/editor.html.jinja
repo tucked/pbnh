@@ -32,11 +32,12 @@
                 margin: 0;
                 padding: 1rem;
             }
-            #toolbar button {
+            #toolbar a, #toolbar button {
                 background: none;
                 border: 0;
                 padding: 0;
                 cursor: pointer;
+                text-decoration: none;
             }
             .icon {
                 width: 1.5rem;
@@ -61,12 +62,12 @@
         </main>
         <ul id="toolbar">
             <li>
-                <button id="about" type="button" title="About">
+                <a id="about" href="/about" title="About">
                     <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/circle-help.svg') }}" alt="">
                 </a>
             </li>
             <li>
-                <button id="new" type="button" title="New Paste">
+                <a id="new" href="/" title="New Paste">
                     <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/file-plus.svg') }}" alt="">
                 </a>
             </li>
@@ -101,9 +102,6 @@
             });
             window.editor.focus();
 
-            // Toolbar
-            document.getElementById("about").addEventListener("click", () => window.location.href = "/about");
-            document.getElementById("new").addEventListener("click", () => window.location.href = "/");
             {%- if not read_only %}
 
             function savePaste(key) {
