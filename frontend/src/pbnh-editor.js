@@ -28,6 +28,7 @@ function findLanguage(filename, mime) {
  */
 export class PbnhEditor {
   #languageCompartment = new Compartment();
+  #readOnlyCompartment = new Compartment();
   #view;
 
   constructor({ parent, url, onKeyDown } = {}) {
@@ -51,7 +52,7 @@ export class PbnhEditor {
         basicSetup,
         monokai,
         this.#languageCompartment.of([]),
-        EditorState.readOnly.of(!!url),
+        this.#readOnlyCompartment.of([]),
         EditorView.theme({ "&": { height: "100%" } }),
         EditorView.domEventHandlers({
           keydown: (event, view) => {
@@ -62,6 +63,7 @@ export class PbnhEditor {
       ],
     });
 
+    if (url) this.#setReadOnly(true);
     if (filename || mime) this.setLanguage(filename, mime);
   }
 
@@ -105,6 +107,16 @@ export class PbnhEditor {
       .catch((err) => {
         console.error(`The ${description.name} highlighter failed to load!`, err);
       });
+  }
+
+  /**
+   * Enable or disable read-only mode.
+   * @param {boolean} readOnly - Whether the editor should be read-only.
+   */
+  #setReadOnly(readOnly) {
+    this.#view.dispatch({
+      effects: this.#readOnlyCompartment.reconfigure(EditorState.readOnly.of(readOnly)),
+    });
   }
 
   /**
