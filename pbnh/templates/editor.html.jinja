@@ -125,9 +125,9 @@
             {%- else %}
             window.editor.focus();
 
-            function savePaste(key) {
+            function savePaste(key, value) {
                 const form = new FormData();
-                form.append(key, window.editor.getValue());
+                form.append(key, value || window.editor.getValue());
                 fetch("/", { method: "POST", body: form })
                     .then((response) => {
                         if (!response.ok) {
@@ -152,7 +152,7 @@
                     return;
                 }
                 if (confirm("Create a paste that redirects to the URL below?\n\n" + url)) {
-                    savePaste("redirect");
+                    savePaste("redirect", url);
                 }
             });
             document.getElementById("save").addEventListener("click", () => {
