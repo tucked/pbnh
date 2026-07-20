@@ -64,26 +64,7 @@ export class PbnhEditor {
 
     if (onLoad) onLoad();
 
-    if (filename || mime) {
-      const description = findLanguage(filename, mime);
-      if (description) {
-        console.info(`Language: ${description.name}`);
-        description
-          .load()
-          .then((support) => {
-            this.#view.dispatch({
-              effects: this.#languageCompartment.reconfigure(support),
-            });
-          })
-          .catch((err) => {
-            console.error(`Loading the ${description.name} highlighter failed!`, err);
-          });
-      } else {
-        let target = filename || mime;
-        if (filename && mime) target += " (" + mime + ")";
-        console.warn(`An appropriate highlighter for ${target} could not be found.`);
-      }
-    }
+    if (filename || mime) this.setLanguage(filename, mime);
   }
 
   /**
@@ -99,5 +80,32 @@ export class PbnhEditor {
    */
   focus() {
     this.#view.focus();
+  }
+
+  /**
+   * Set the language for the editor.
+   * @param {string} filename - The filename to use for language detection.
+   * @param {string} mime - The MIME type to use for language detection.
+   */
+  setLanguage(filename, mime) {
+    if (!filename && !mime) return;
+    const description = findLanguage(filename, mime);
+    if (!description) {
+      let target = filename || mime;
+      if (filename && mime) target += " (" + mime + ")";
+      console.warn(`An appropriate highlighter for ${target} could not be found.`);
+      return;
+    }
+    console.info(`Language: ${description.name}`);
+    description
+      .load()
+      .then((support) => {
+        this.#view.dispatch({
+          effects: this.#languageCompartment.reconfigure(support),
+        });
+      })
+      .catch((err) => {
+        console.error(`The ${description.name} highlighter failed to load!`, err);
+      });
   }
 }
