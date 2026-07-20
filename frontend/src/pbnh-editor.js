@@ -30,7 +30,7 @@ export class PbnhEditor {
   #languageCompartment = new Compartment();
   #view;
 
-  constructor({ parent, url, onKeyDown, onLoad } = {}) {
+  constructor({ parent, url, onKeyDown } = {}) {
     let doc = "";
     let mime = "";
     let filename = "";
@@ -61,8 +61,6 @@ export class PbnhEditor {
         }),
       ],
     });
-
-    if (onLoad) onLoad();
 
     if (filename || mime) this.setLanguage(filename, mime);
   }

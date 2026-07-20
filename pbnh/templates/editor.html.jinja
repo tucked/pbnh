@@ -98,7 +98,6 @@
                     }
                 },
                 {%- endif %}
-                onLoad: () => { document.getElementById("loading").remove(); },
             });
             window.editor.focus();
 
@@ -134,6 +133,8 @@
                 }
             });
             document.getElementById("save").addEventListener("click", () => savePaste("content"));
+
+            document.getElementById("loading").remove();
             {%- endif %}
         </script>
     </body>
