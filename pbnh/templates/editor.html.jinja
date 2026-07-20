@@ -129,8 +129,14 @@
                 const form = new FormData();
                 form.append(key, window.editor.getValue());
                 fetch("/", { method: "POST", body: form })
-                    .then(response => response.ok ? response.text() : "")
-                    .then(text => { if (text) window.location.href = JSON.parse(text).link + ".txt"; });
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(`Save failed: ${response.status} ${response.statusText}`);
+                        }
+                        return response.text();
+                    })
+                    .then((text) => { window.location.href = JSON.parse(text).link + ".txt"; })
+                    .catch(alert);
             }
 
             document.getElementById("redirect").addEventListener("click", () => {
@@ -149,7 +155,13 @@
                     savePaste("redirect");
                 }
             });
-            document.getElementById("save").addEventListener("click", () => savePaste("content"));
+            document.getElementById("save").addEventListener("click", () => {
+                if (!window.editor.getValue()) {
+                    alert("Please enter text to save.");
+                    return;
+                }
+                savePaste("content");
+            });
 
             document.getElementById("loading").remove();
             {%- endif %}
