@@ -108,4 +108,18 @@ export class PbnhEditor {
         console.error(`The ${description.name} highlighter failed to load!`, err);
       });
   }
+
+  /**
+   * Update the document content.
+   * @param {string} doc - The new document content.
+   */
+  setValue(doc) {
+    this.#view.dispatch({
+      changes: {
+        from: 0,
+        to: this.#view.state.doc.length,
+        insert: doc,
+      },
+    });
+  }
 }
