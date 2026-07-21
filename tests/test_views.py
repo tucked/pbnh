@@ -172,7 +172,7 @@ def test_no_mode_redirect(content_key, test_client):
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(f"/{hashid}.txt/")
-    assert response.status_code == 301
+    assert response.status_code == 302
 
 
 def test_raw_mode_redirect(content_key, test_client):
@@ -316,7 +316,7 @@ def test_get_no_extension_slash(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc"})
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}/")
-    assert response.status_code == 301
+    assert response.status_code == 302
     assert response.location.endswith(f"/{hashid}/text")
 
 
@@ -331,7 +331,7 @@ def test_get_no_extension_unguessable_slash(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc", "mime": "fo/shizzle"})
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}/")
-    assert response.status_code == 301
+    assert response.status_code == 302
     assert response.location.endswith(f"/{hashid}/raw")
 
 
