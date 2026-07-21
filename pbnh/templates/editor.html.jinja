@@ -100,7 +100,6 @@
                 },
                 {%- endif %}
             });
-            window.editor.focus();
 
             {%- if read_only %}
             fetch("{{ url }}")
@@ -115,6 +114,7 @@
                     document.getElementById("loading").remove();
                 });
             {%- else %}
+            window.editor.focus();
 
             function savePaste(key) {
                 var xhttp = new XMLHttpRequest();
