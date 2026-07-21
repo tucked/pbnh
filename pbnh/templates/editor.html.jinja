@@ -135,7 +135,7 @@
                         }
                         return response.text();
                     })
-                    .then((text) => { window.location.href = JSON.parse(text).link + ".txt"; })
+                    .then((text) => { window.location.href = JSON.parse(text).link + "/text"; })
                     .catch(alert);
             }
 
