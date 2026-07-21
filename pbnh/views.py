@@ -1,6 +1,7 @@
 import functools
 import json
 import mimetypes
+import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -58,6 +59,14 @@ def _mode_for_mime(mime: str) -> str:
     if mime in {"application/asciicast+json", "application/x-asciicast"}:
         return "cast"
     return "raw"
+
+
+def _redirect(path: str, *args: Any, **kwargs: Any) -> flask.typing.ResponseReturnValue:
+    return redirect(
+        urllib.parse.urlsplit(request.url)._replace(path=path).geturl(),
+        *args,
+        **kwargs,
+    )
 
 
 def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
@@ -159,11 +168,6 @@ def _renderer_for_mode(
         abort(400, f"{exc} is not a recognized rendering mode.")
 
 
-@blueprint.get("/")
-def index() -> str:
-    return render_template("editor.html.jinja")
-
-
 @blueprint.post("/")
 def create_paste() -> tuple[dict[str, str], int]:
     """Create a new paste."""
@@ -213,48 +217,57 @@ def create_paste() -> tuple[dict[str, str], int]:
     return {"hashid": hashid, "link": request.url + hashid}, status
 
 
+@blueprint.get("/")
+def index() -> str:
+    """Render the home page."""
+    return render_template("editor.html.jinja")
+
+
+@blueprint.get("/<string:hashid>.")
+@blueprint.get("/<string:hashid>./<string:mode>")
+@blueprint.get("/<string:hashid>.<string:extension>")
+def retrieve_paste(
+    hashid: str, extension: str = "", mode: str = ""
+) -> flask.typing.ResponseReturnValue:
+    """Retrieve a paste."""
+    paste = _get_paste(hashid)
+    if not extension:
+        suffix = mimetypes.guess_extension(paste["mime"], strict=False) or ""
+        if mode:
+            suffix += f"/{mode}"
+        if suffix:
+            return _redirect(f"/{hashid}{suffix}", 301)
+    elif extension == "asciinema":
+        # .asciinema is a legacy pbnh thing...
+        # asciinema used to use .json (application/asciicast+json),
+        # and now it uses .cast (application/x-asciicast).
+        return _redirect(f"/{hashid}/cast", 301)
+    return _render_raw(hashid=hashid, extension=extension, paste=paste)
+
+
+@blueprint.get("/<string:hashid>")
+@blueprint.get("/<string:hashid>/<string:mode>")
+@blueprint.get("/<string:hashid>.<string:extension>/<string:mode>")
+def render_paste(
+    hashid: str, extension: str = "", mode: str = ""
+) -> flask.typing.ResponseReturnValue:
+    """Render a paste."""
+    paste = None
+    if not mode:
+        paste = _get_paste(hashid)
+        mode = _mode_for_mime(paste["mime"])
+    renderer = _renderer_for_mode(mode)
+    return renderer(hashid=hashid, extension=extension, paste=paste)
+
+
 @blueprint.get("/<string:hashid>/")
 @blueprint.get("/<string:hashid>.<string:extension>/")
 def redirect_to_mode(
     hashid: str, extension: str = ""
 ) -> flask.typing.ResponseReturnValue:
+    """Redirect to a URL with an explicit mode."""
     if extension:
-        return redirect(f"/{hashid}.{extension}/raw", 301)
+        return _redirect(f"/{hashid}.{extension}/raw", 301)
     paste = _get_paste(hashid)
     mode = _mode_for_mime(paste["mime"])
-    return redirect(f"/{hashid}/{mode}", 301)
-
-
-@blueprint.get("/<string:hashid>.")
-@blueprint.get("/<string:hashid>./<string:mode>")
-def redirect_to_raw(hashid: str, mode: str = "") -> flask.typing.ResponseReturnValue:
-    paste = _get_paste(hashid)
-    suffix = mimetypes.guess_extension(paste["mime"], strict=False)
-    if not suffix and not mode:
-        return _render_raw(hashid=hashid, paste=paste)
-    location = f"/{hashid}{suffix}"
-    if mode:
-        location += f"/{mode}"
-    return redirect(location, 301)
-
-
-@blueprint.get("/<string:hashid>")
-@blueprint.get("/<string:hashid>/<string:mode>")
-@blueprint.get("/<string:hashid>.<string:extension>")
-@blueprint.get("/<string:hashid>.<string:extension>/<string:mode>")
-def view_paste(
-    hashid: str, extension: str = "", mode: str = ""
-) -> flask.typing.ResponseReturnValue:
-    if mode:
-        renderer = _renderer_for_mode(mode)
-        return renderer(hashid=hashid, extension=extension)
-    if extension:
-        if extension == "asciinema":
-            # .asciinema is a legacy pbnh thing...
-            # asciinema used to use .json (application/asciicast+json),
-            # and now it uses .cast (application/x-asciicast).
-            return redirect(request.url.replace(".asciinema", "/cast"), 301)
-        return _render_raw(hashid=hashid, extension=extension)
-    paste = _get_paste(hashid)
-    renderer = _renderer_for_mode(_mode_for_mime(paste["mime"]))
-    return renderer(hashid=hashid, extension=extension, paste=paste)
+    return _redirect(f"/{hashid}/{mode}", 301)
