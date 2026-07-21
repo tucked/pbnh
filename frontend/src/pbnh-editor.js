@@ -28,20 +28,10 @@ function findLanguage(filename, mime) {
  */
 export class PbnhEditor {
   #languageCompartment = new Compartment();
+  #readOnlyCompartment = new Compartment();
   #view;
 
-  constructor({ parent, url, onKeyDown, onLoad } = {}) {
-    let doc = "";
-    let mime = "";
-    let filename = "";
-    if (url) {
-      const xmlhttp = new XMLHttpRequest();
-      xmlhttp.open("GET", url, false);
-      xmlhttp.send();
-      doc = xmlhttp.responseText;
-      mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
-      filename = new URL(url, window.location.href).pathname;
-    }
+  constructor({ parent, doc, filename, mime, onKeyDown, readOnly = false } = {}) {
 
     // Make `view` private to keep CodeMirror as an implementation detail.
     this.#view = new EditorView({
@@ -51,7 +41,7 @@ export class PbnhEditor {
         basicSetup,
         monokai,
         this.#languageCompartment.of([]),
-        EditorState.readOnly.of(!!url),
+        this.#readOnlyCompartment.of([]),
         EditorView.theme({ "&": { height: "100%" } }),
         EditorView.domEventHandlers({
           keydown: (event, view) => {
@@ -62,28 +52,8 @@ export class PbnhEditor {
       ],
     });
 
-    if (onLoad) onLoad();
-
-    if (filename || mime) {
-      const description = findLanguage(filename, mime);
-      if (description) {
-        console.info(`Language: ${description.name}`);
-        description
-          .load()
-          .then((support) => {
-            this.#view.dispatch({
-              effects: this.#languageCompartment.reconfigure(support),
-            });
-          })
-          .catch((err) => {
-            console.error(`Loading the ${description.name} highlighter failed!`, err);
-          });
-      } else {
-        let target = filename || mime;
-        if (filename && mime) target += " (" + mime + ")";
-        console.warn(`An appropriate highlighter for ${target} could not be found.`);
-      }
-    }
+    if (readOnly) this.#setReadOnly(true);
+    if (filename || mime) this.setLanguage(filename, mime);
   }
 
   /**
@@ -99,5 +69,56 @@ export class PbnhEditor {
    */
   focus() {
     this.#view.focus();
+  }
+
+  /**
+   * Set the language for the editor.
+   * @param {string} filename - The filename to use for language detection.
+   * @param {string} mime - The MIME type to use for language detection.
+   */
+  setLanguage(filename, mime) {
+    if (!filename && !mime) return;
+    const description = findLanguage(filename, mime);
+    if (!description) {
+      let target = filename || mime;
+      if (filename && mime) target += " (" + mime + ")";
+      console.warn(`An appropriate highlighter for ${target} could not be found.`);
+      return;
+    }
+    console.info(`Language: ${description.name}`);
+    description
+      .load()
+      .then((support) => {
+        this.#view.dispatch({
+          effects: this.#languageCompartment.reconfigure(support),
+        });
+      })
+      .catch((err) => {
+        console.error(`The ${description.name} highlighter failed to load!`, err);
+      });
+  }
+
+  /**
+   * Enable or disable read-only mode.
+   * @param {boolean} readOnly - Whether the editor should be read-only.
+   */
+  #setReadOnly(readOnly) {
+    this.#view.dispatch({
+      effects: this.#readOnlyCompartment.reconfigure(EditorState.readOnly.of(readOnly)),
+    });
+  }
+
+  /**
+   * Update the document content.
+   * @param {string} doc - The new document content.
+   */
+  setValue(doc) {
+    this.#view.dispatch({
+      changes: {
+        from: 0,
+        to: this.#view.state.doc.length,
+        insert: doc,
+      },
+    });
   }
 }
