@@ -16,6 +16,6 @@ cp "$node_modules/asciinema-player/dist/bundle/asciinema-player.css" "$outdir/as
 
 # Lucide (static SVGs)
 mkdir -p "$outdir/lucide/icons"
-for icon in loader circle-help file-plus external-link save; do
+for icon in loader file-exclamation-point circle-help file-plus external-link save; do
   cp "$node_modules/lucide-static/icons/$icon.svg" "$outdir/lucide/icons/$icon.svg"
 done

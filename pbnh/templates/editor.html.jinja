@@ -14,14 +14,13 @@
                 display: flex;
             }
             main {
-                position: relative;
                 flex: 1;
             }
             #loading {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                position: fixed;
+                inset: 0;
+                margin: auto;
+                display: block;
                 pointer-events: none;
             }
             #toolbar {
@@ -57,9 +56,8 @@
         </style>
     </head>
     <body>
-        <main>
-            <img id="loading" class="icon spin" src="{{ url_for('static', filename='dist/lucide/icons/loader.svg') }}" alt="">
-        </main>
+        <main></main>
+        <img id="loading" class="icon spin" src="{{ url_for('static', filename='dist/lucide/icons/loader.svg') }}" alt="">
         <ul id="toolbar">
             <li>
                 <a id="about" href="/about" title="About">
@@ -104,6 +102,9 @@
             {%- if read_only %}
             fetch("{{ url }}")
                 .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch ${response.url}: ${response.status} ${response.statusText}`);
+                    }
                     const filename = new URL(response.url).pathname;
                     const mime = (response.headers.get("Content-Type") || "").split(";")[0].trim();
                     window.editor.setLanguage(filename, mime);
@@ -112,21 +113,30 @@
                 .then(doc => {
                     window.editor.setValue(doc);
                     document.getElementById("loading").remove();
+                })
+                .catch((error) => {
+                    document.querySelector("main").innerHTML = "";
+                    const loading = document.getElementById("loading");
+                    loading.src = {{ url_for('static', filename='dist/lucide/icons/file-exclamation-point.svg') | tojson }};
+                    loading.classList.remove("spin");
+                    loading.alt = "PbnhEditor failed to initialize."
+                    console.error(loading.alt, error);
                 });
             {%- else %}
             window.editor.focus();
 
-            function savePaste(key) {
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
-                    if (xhttp.readyState == 4 && xhttp.status == 201 && xhttp.responseText.length) {
-                        window.location.href = JSON.parse(xhttp.responseText).link + ".txt";
-                    }
-                };
-                var myForm = new FormData();
-                myForm.append(key, window.editor.getValue());
-                xhttp.open("POST", "/");
-                xhttp.send(myForm);
+            function savePaste(key, value) {
+                const form = new FormData();
+                form.append(key, value || window.editor.getValue());
+                fetch("/", { method: "POST", body: form })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error(`Save failed: ${response.status} ${response.statusText}`);
+                        }
+                        return response.text();
+                    })
+                    .then((text) => { window.location.href = JSON.parse(text).link + ".txt"; })
+                    .catch(alert);
             }
 
             document.getElementById("redirect").addEventListener("click", () => {
@@ -142,10 +152,16 @@
                     return;
                 }
                 if (confirm("Create a paste that redirects to the URL below?\n\n" + url)) {
-                    savePaste("redirect");
+                    savePaste("redirect", url);
                 }
             });
-            document.getElementById("save").addEventListener("click", () => savePaste("content"));
+            document.getElementById("save").addEventListener("click", () => {
+                if (!window.editor.getValue()) {
+                    alert("Please enter text to save.");
+                    return;
+                }
+                savePaste("content");
+            });
 
             document.getElementById("loading").remove();
             {%- endif %}
