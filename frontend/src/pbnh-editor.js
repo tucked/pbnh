@@ -31,18 +31,7 @@ export class PbnhEditor {
   #readOnlyCompartment = new Compartment();
   #view;
 
-  constructor({ parent, url, onKeyDown } = {}) {
-    let doc = "";
-    let mime = "";
-    let filename = "";
-    if (url) {
-      const xmlhttp = new XMLHttpRequest();
-      xmlhttp.open("GET", url, false);
-      xmlhttp.send();
-      doc = xmlhttp.responseText;
-      mime = (xmlhttp.getResponseHeader("Content-Type") || "").split(";")[0].trim();
-      filename = new URL(url, window.location.href).pathname;
-    }
+  constructor({ parent, doc, filename, mime, onKeyDown, readOnly = false } = {}) {
 
     // Make `view` private to keep CodeMirror as an implementation detail.
     this.#view = new EditorView({
@@ -63,7 +52,7 @@ export class PbnhEditor {
       ],
     });
 
-    if (url) this.#setReadOnly(true);
+    if (readOnly) this.#setReadOnly(true);
     if (filename || mime) this.setLanguage(filename, mime);
   }
 
