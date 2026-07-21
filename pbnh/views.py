@@ -16,6 +16,11 @@ from pbnh import db
 blueprint = Blueprint("views", __name__)
 REDIRECT_MIME = "text/x.pbnh.redirect"
 
+# https://github.com/asciinema/asciinema/issues/224
+mimetypes.add_type("application/x-asciicast", ".cast", strict=False)
+# https://github.com/python/cpython/issues/101137
+mimetypes.add_type("text/x-rst", ".rst", strict=False)
+
 
 def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
     try:
@@ -40,11 +45,12 @@ def _get_paste(hashid: str) -> dict[str, Any]:
         return paster.query(hashid=hashid) or abort(404)
 
 
-def _guess_mime(url: str) -> str | None:
-    return mimetypes.guess_type(url, strict=False)[0] or {
-        ".cast": "application/x-asciicast",
-        ".rst": "text/x-rst",  # https://github.com/python/cpython/issues/101137
-    }.get(Path(url).suffix)
+def _guess_extension(mime: str) -> str:
+    return (mimetypes.guess_extension(mime, strict=False) or "")[1:]
+
+
+def _guess_mime(url: str) -> str:
+    return mimetypes.guess_type(url, strict=False)[0] or ""
 
 
 def _mode_for_mime(mime: str) -> str:
@@ -119,8 +125,10 @@ def _render_raw(
 ) -> Response:
     if not paste:
         paste = _get_paste(hashid)
-    mime = _guess_mime(f"{hashid}.{extension}") if extension else paste["mime"]
-    return Response(paste["data"], mimetype=mime or "")
+    return Response(
+        paste["data"],
+        mimetype=_guess_mime(request.url) if extension else paste["mime"],
+    )
 
 
 def _render_redirect(
@@ -145,8 +153,7 @@ def _render_text(
     **_: object,
 ) -> str:
     if not extension:
-        mime = (paste or _get_paste(hashid))["mime"]
-        extension = (mimetypes.guess_extension(mime, strict=False) or "")[1:]
+        extension = _guess_extension((paste or _get_paste(hashid))["mime"])
     return render_template("editor.html.jinja", url=f"/{hashid}.{extension}")
 
 
@@ -232,7 +239,10 @@ def retrieve_paste(
     """Retrieve a paste."""
     paste = _get_paste(hashid)
     if not extension:
-        suffix = mimetypes.guess_extension(paste["mime"], strict=False) or ""
+        extension = _guess_extension(paste["mime"])
+        suffix = ""
+        if extension:
+            suffix += f".{extension}"
         if mode:
             suffix += f"/{mode}"
         if suffix:
@@ -267,6 +277,6 @@ def redirect_to_mode(
 ) -> flask.typing.ResponseReturnValue:
     """Redirect to a URL with an explicit mode."""
     paste = _get_paste(hashid)
-    mime = (_guess_mime(f"{hashid}.{extension}") or "") if extension else paste["mime"]
+    mime = _guess_mime(request.url) if extension else paste["mime"]
     mode = _mode_for_mime(mime)
     return _redirect(request.path + mode, 302)
