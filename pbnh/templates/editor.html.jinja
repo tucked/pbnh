@@ -102,6 +102,9 @@
             {%- if read_only %}
             fetch("{{ url }}")
                 .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch ${response.url}: ${response.status} ${response.statusText}`);
+                    }
                     const filename = new URL(response.url).pathname;
                     const mime = (response.headers.get("Content-Type") || "").split(";")[0].trim();
                     window.editor.setLanguage(filename, mime);
@@ -110,6 +113,14 @@
                 .then(doc => {
                     window.editor.setValue(doc);
                     document.getElementById("loading").remove();
+                })
+                .catch((error) => {
+                    document.querySelector("main").innerHTML = "";
+                    const loading = document.getElementById("loading");
+                    loading.src = {{ url_for('static', filename='dist/lucide/icons/file-exclamation-point.svg') | tojson }};
+                    loading.classList.remove("spin");
+                    loading.alt = "PbnhEditor failed to initialize."
+                    console.error(loading.alt, error);
                 });
             {%- else %}
             window.editor.focus();
