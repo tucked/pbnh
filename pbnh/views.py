@@ -266,8 +266,7 @@ def redirect_to_mode(
     hashid: str, extension: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Redirect to a URL with an explicit mode."""
-    if extension:
-        return _redirect(f"/{hashid}.{extension}/raw", 301)
     paste = _get_paste(hashid)
-    mode = _mode_for_mime(paste["mime"])
-    return _redirect(f"/{hashid}/{mode}", 301)
+    mime = (_guess_mime(f"{hashid}.{extension}") or "") if extension else paste["mime"]
+    mode = _mode_for_mime(mime)
+    return _redirect(request.path + mode, 302)
