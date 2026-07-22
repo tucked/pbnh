@@ -65,9 +65,13 @@ def create_app(
     app.register_blueprint(pbnh.cli.blueprint)
     app.register_blueprint(pbnh.views.blueprint)
 
+    # Prepare the app for DB access.
+    import pbnh.db
+
+    pbnh.db.init_app(app)
+
     # Ensure the DB is accessible.
     while check_db:
-        import pbnh.db
 
         with app.app_context():
             try:
