@@ -172,7 +172,6 @@ class _RenderRequest:
                     self._render_docutils, parser="restructuredtext"
                 ),
                 "text": self._render_text,
-                "txt": self._render_text,  # legacy
             }[mode]
         except KeyError as exc:
             abort(400, f"{exc} is not a recognized rendering mode.")
@@ -296,6 +295,8 @@ def render_paste(
     hashid: str, extension: str = "", mode: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Render a paste."""
+    if mode == "txt":  # legacy
+        return _redirect(request.path.replace("/txt", "/text"), 301)
     return _RenderRequest(paste=_get_paste(hashid), extension=extension).rendered(mode)
 
 

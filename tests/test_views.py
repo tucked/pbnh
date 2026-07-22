@@ -189,8 +189,19 @@ def test_raw_mode_redirect(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}./txt")
+    response = test_client.get(f"/{hashid}./text")
     assert response.status_code == 301
+
+
+@pytest.mark.parametrize("suffix", ["", ".json"])
+def test_txt_redirect(content_key, test_client, suffix):
+    response = test_client.post("/", data={content_key: "abc"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    base_path = f"/{hashid}{suffix}"
+    response = test_client.get(f"{base_path}/txt")
+    assert response.status_code == 301
+    assert response.location.endswith(f"{base_path}/text")
 
 
 def test_text_mode_guess_type(content_key, test_client):
@@ -206,7 +217,7 @@ def test_paste_highlight(content_key, test_client, ext):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}/{ext}")
+    response = test_client.get(f"/{hashid}.{ext}")
     assert response.status_code == 200
 
 
@@ -226,7 +237,7 @@ def test_paste_non_utf8(content_key, test_client):
     response = test_client.post("/", data={content_key: (BytesIO(b"\xff"), "test")})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
-    response = test_client.get(f"/{hashid}/txt")
+    response = test_client.get(f"/{hashid}/text")
     assert response.status_code == 200
 
 
