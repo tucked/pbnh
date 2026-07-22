@@ -5,7 +5,7 @@ from datetime import datetime
 
 import magic
 import sqlalchemy.exc
-from flask import current_app, g
+from flask import Flask, current_app, g
 from sqlalchemy import (
     Column,
     DateTime,
@@ -138,6 +138,16 @@ def _get_engine() -> Engine:
         # mypy gives precedence to the g.engine type
         # instead of the assignement above:
         return g.engine  # type: ignore
+
+
+def init_app(app: Flask) -> None:
+    """Prepare an app for DB access."""
+
+    @app.teardown_appcontext
+    def _dispose_db_engine(_: BaseException | None) -> None:
+        engine = getattr(g, "engine", None)
+        if engine:
+            engine.dispose()
 
 
 @contextlib.contextmanager
