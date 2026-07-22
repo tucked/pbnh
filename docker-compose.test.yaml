@@ -10,4 +10,4 @@ services:
     pull_policy: build
     depends_on:
       - db
-    command: ./run_tests.sh
+    command: ./docker-compose.test.sh
