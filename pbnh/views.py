@@ -18,8 +18,6 @@ REDIRECT_MIME = "text/x.pbnh.redirect"
 
 # https://github.com/asciinema/asciinema/issues/224
 mimetypes.add_type("application/x-asciicast", ".cast", strict=False)
-# https://github.com/python/cpython/issues/101137
-mimetypes.add_type("text/x-rst", ".rst", strict=False)
 
 
 def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:

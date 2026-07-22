@@ -3,7 +3,7 @@ WORKDIR /frontend
 COPY frontend/ ./
 RUN npm ci && npm run build
 
-FROM python:3.11-slim
+FROM python:3.14-slim
 # psycopg2: https://www.psycopg.org/docs/install.html#build-prerequisites
 # python-magic: https://github.com/ahupp/python-magic#debianubuntu
 RUN apt update && apt install --assume-yes \
