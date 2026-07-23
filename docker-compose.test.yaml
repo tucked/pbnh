@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:9.6
+    image: postgres:18
     environment:
       - POSTGRES_DB=pastedb
       - POSTGRES_USER=postgres
@@ -10,4 +10,4 @@ services:
     pull_policy: build
     depends_on:
       - db
-    command: ./run_tests.sh
+    command: ./docker-compose.test.sh

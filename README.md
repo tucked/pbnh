@@ -29,7 +29,7 @@ docker pull tucked/pbnh:latest
 Before deploying, create a configuration file that tells the app _how_ to run:
 
 ``` sh
-edit sample_config.yml
+edit sample_config.yaml
 ```
 
 Primarily, `SQLALCHEMY_DATABASE_URI` needs to be set.
@@ -71,7 +71,7 @@ Next, initialize the database:
 
 ``` sh
 docker run --interactive --tty \
-    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/sample_config.yaml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     tucked/pbnh:latest pipenv run flask --app pbnh db init
 ```
@@ -108,7 +108,7 @@ Finally, start the app:
 
 ``` sh
 docker run --interactive --tty \
-    --volume "$PWD/sample_config.yml:/etc/pbnh.yaml:ro" \
+    --volume "$PWD/sample_config.yaml:/etc/pbnh.yaml:ro" \
     --volume "$PWD/paste.sqlite:/pbnh/tmpdb.sqlite" \
     --publish 12345:8000 \
     tucked/pbnh:latest
@@ -141,10 +141,10 @@ Alternatively, use the `bin/run.sh` script to build and run a development instan
 
 ### Testing
 
-To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yml`:
+To run the tests, run the `sut` ("System Under Test") service in `docker-compose.test.yaml`:
 
 ``` sh
-docker compose -f docker-compose.test.yml run sut
+docker compose -f docker-compose.test.yaml run sut
 ```
 
 Note: This pattern is meant to be compatible with [automated repository testing on Docker Hub](https://docs.docker.com/docker-hub/builds/automated-testing/).
