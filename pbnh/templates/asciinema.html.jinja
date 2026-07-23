@@ -1,12 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>pbnh AsciinemaPlayer</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='dist/asciinema-player.css') }}">
+        <meta name="description" content="pbnh AsciinemaPlayer">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='dist/asciinema-player.css') }}">
         <script src="{{ url_for('static', filename='dist/asciinema-player.min.js') }}"></script>
     </head>
     <body>
-        <main></main>
+        <main>
+            <!-- AsciinemaPlayer dynamically loads here. -->
+        </main>
         <script>
             AsciinemaPlayer.create(
                 "{{ url }}",

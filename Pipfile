@@ -19,6 +19,7 @@ werkzeug = {version = ">=2.2"}
 [dev-packages]
 bandit = {version = ">=1.7"}
 black = {version = ">=22.10"}
+djlint = {version = ">=1.42"}
 flake8 = {version = ">=6.0"}
 flake8-pyproject = {version = ">=1.2"}
 isort = {version = ">=7.0"}
