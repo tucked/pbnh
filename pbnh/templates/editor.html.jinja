@@ -1,8 +1,9 @@
 {% set read_only = url is defined and url is not none %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>pbnh</title>
+        <meta name="description" content="pbnh Text Editor">
         <style>
             html, body {
                 background-color: #272822;  /* Make the background match codemirror-theme-monokai. */
@@ -57,6 +58,7 @@
     </head>
     <body>
         <main>
+            <!-- PbnhEditor dynamically loads here. -->
         </main>
         <img id="loading"
              class="icon spin"
@@ -64,14 +66,16 @@
              alt="">
         <ul id="toolbar">
             <li>
-                <a id="about" href="/about" title="About">
+                <a id="about"
+                   href="{{ url_for('views.render_paste', hashid='about') }}"
+                   title="About">
                     <img class="icon"
                          src="{{ url_for('static', filename='dist/lucide/icons/circle-help.svg') }}"
                          alt="">
                 </a>
             </li>
             <li>
-                <a id="new" href="/" title="New Paste">
+                <a id="new" href="{{ url_for('views.index') }}" title="New Paste">
                     <img class="icon"
                          src="{{ url_for('static', filename='dist/lucide/icons/file-plus.svg') }}"
                          alt="">

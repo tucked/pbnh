@@ -4,7 +4,7 @@ set -o xtrace
 pipenv install --deploy --dev
 pipenv audit
 pipenv run black --check pbnh tests
-pipenv run djlint --check pbnh/templates
+pipenv run djlint --check --lint pbnh/templates
 pipenv run isort --check pbnh tests
 pipenv run flake8 pbnh tests
 pipenv run mypy --strict pbnh
