@@ -56,30 +56,42 @@
         </style>
     </head>
     <body>
-        <main></main>
-        <img id="loading" class="icon spin" src="{{ url_for('static', filename='dist/lucide/icons/loader.svg') }}" alt="">
+        <main>
+        </main>
+        <img id="loading"
+             class="icon spin"
+             src="{{ url_for('static', filename='dist/lucide/icons/loader.svg') }}"
+             alt="">
         <ul id="toolbar">
             <li>
                 <a id="about" href="/about" title="About">
-                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/circle-help.svg') }}" alt="">
+                    <img class="icon"
+                         src="{{ url_for('static', filename='dist/lucide/icons/circle-help.svg') }}"
+                         alt="">
                 </a>
             </li>
             <li>
                 <a id="new" href="/" title="New Paste">
-                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/file-plus.svg') }}" alt="">
+                    <img class="icon"
+                         src="{{ url_for('static', filename='dist/lucide/icons/file-plus.svg') }}"
+                         alt="">
                 </a>
             </li>
             {%- if not read_only %}
-            <li>
-                <button id="redirect" type="button" title="Save as Redirect">
-                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/external-link.svg') }}" alt="">
-                </button>
-            </li>
-            <li>
-                <button id="save" type="button" title="Save (ctrl+s)">
-                    <img class="icon" src="{{ url_for('static', filename='dist/lucide/icons/save.svg') }}" alt="">
-                </button>
-            </li>
+                <li>
+                    <button id="redirect" type="button" title="Save as Redirect">
+                        <img class="icon"
+                             src="{{ url_for('static', filename='dist/lucide/icons/external-link.svg') }}"
+                             alt="">
+                    </button>
+                </li>
+                <li>
+                    <button id="save" type="button" title="Save (ctrl+s)">
+                        <img class="icon"
+                             src="{{ url_for('static', filename='dist/lucide/icons/save.svg') }}"
+                             alt="">
+                    </button>
+                </li>
             {%- endif %}
         </ul>
         <script type="module">
