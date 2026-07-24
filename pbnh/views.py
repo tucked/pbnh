@@ -30,6 +30,7 @@ DOCUTILS_MIMES = {  # parsers
 }
 REDIRECT_MIME = "text/x.pbnh.redirect"
 VIEW_MIMES = {
+    "asciicast": {"application/asciicast+json", "application/x-asciicast"},
     "docutils": set(DOCUTILS_MIMES),
 }
 
@@ -98,8 +99,6 @@ def _mode_for_mime(mime: str) -> str:
         return "view"
     if mime.startswith("text/"):
         return "text"
-    if mime in {"application/asciicast+json", "application/x-asciicast"}:
-        return "cast"
     return "raw"
 
 
@@ -164,7 +163,7 @@ class _RenderRequest:
             "editor.html.jinja", url=f"/{self.paste['hashid']}.{extension}"
         )
 
-    def _render_view(self) -> Response:
+    def _render_view(self) -> flask.typing.ResponseReturnValue:
         mime = self.paste["mime"]
         if self.extension:
             mime = _guess_mime(f"/{self.paste['hashid']}.{self.extension}") or abort(
@@ -174,6 +173,8 @@ class _RenderRequest:
             )
         if parser := DOCUTILS_MIMES.get(mime):
             return self._render_docutils(parser=parser)
+        if mime in VIEW_MIMES["asciicast"]:
+            return self._render_asciicast()
         abort(400, f"There is no renderer associated with the {mime} media type.")
 
     def _renderer_for_mode(
@@ -182,7 +183,6 @@ class _RenderRequest:
     ) -> Callable[..., flask.typing.ResponseReturnValue]:
         try:
             renderer = {
-                "cast": self._render_asciicast,
                 "raw": self._render_raw,
                 "redirect": self._render_redirect,
                 "text": self._render_text,
@@ -299,7 +299,7 @@ def retrieve_paste(
         # .asciinema is a legacy pbnh thing...
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
-        return _redirect(f"/{hashid}/cast", 301)
+        return _redirect(f"/{hashid}.cast/view", 301)
     return _RenderRequest(paste=paste, extension=extension).rendered("raw")
 
 
@@ -310,7 +310,7 @@ def render_paste(
     hashid: str, extension: str = "", mode: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Render a paste."""
-    if mode in {"md", "rst"}:  # legacy
+    if mode in {"cast", "md", "rst"}:  # legacy
         return _redirect(f"/{hashid}.{mode}/view", 301)
     if mode == "txt":  # legacy
         return _redirect(request.path.replace("/txt", "/text"), 301)

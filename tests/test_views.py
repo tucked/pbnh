@@ -281,16 +281,14 @@ def test_get_asciinema(content_key, test_client):
     assert query_string in response.location
 
 
-@pytest.mark.parametrize("suffix", ["", ".cast"])
-@pytest.mark.parametrize("mode", ["", "/cast"])
-def test_get_asciinema_params(content_key, test_client, suffix, mode):
+def test_get_asciinema_params(content_key, test_client):
     response = test_client.post(
         "/", data={content_key: "abc", "mime": "application/x-asciicast"}
     )
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(
-        f"/{hashid}{suffix}{mode}",
+        f"/{hashid}.cast/view",
         query_string={
             "speed": 10,
             "theme": "solarized-light",

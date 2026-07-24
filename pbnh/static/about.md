@@ -91,9 +91,9 @@ A rendering mode can be explicitly selected by appending `/<mode>` to the URI.
 
 Currently, the following rendering modes are supported:
 
-- `/cast` : [Asciinema](https://asciinema.org/) Mode for Asciicasts (`application/x-asciicast`)
 - `/raw ` : [Raw Retrieval](#raw-retrieval)
 - `/text` : Text Mode
 - `/view` : View Mode
+  - [Asciicasts](https://asciinema.org/) (`application/x-asciicast`)
   - [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`)
   - [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`)
