@@ -6,7 +6,7 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import flask.typing
 from docutils.core import publish_string
@@ -162,30 +162,6 @@ class _RenderRequest:
         self,
         mode: str,
     ) -> Callable[..., flask.typing.ResponseReturnValue]:
-        def _wrapped_renderer(
-            renderer: Callable[..., flask.typing.ResponseReturnValue],
-        ) -> Callable[..., flask.typing.ResponseReturnValue]:
-            if mode == "redirect":
-                return renderer
-
-            def _render_unless_unmodified(
-                **kwargs: object,
-            ) -> Response:
-                etag = _etag(
-                    self.paste,
-                    self.extension or _guess_extension(self.paste["mime"]),
-                    mode,
-                )
-                response = make_response(
-                    Response(status=304)
-                    if request.if_none_match.contains_weak(etag)
-                    else renderer(**kwargs)
-                )
-                response.set_etag(etag)
-                return response
-
-            return _render_unless_unmodified
-
         try:
             renderer = {
                 "cast": self._render_asciicast,
@@ -201,8 +177,27 @@ class _RenderRequest:
         except KeyError as exc:
             abort(400, f"{exc} is not a recognized rendering mode.")
 
-        # https://github.com/python/mypy/issues/17478
-        return _wrapped_renderer(renderer)  # type: ignore
+        # mypy can't keep up...
+        renderer = cast(Callable[..., flask.typing.ResponseReturnValue], renderer)
+
+        if mode == "redirect":
+            return renderer
+
+        def _render_unless_unmodified(*args: object, **kwargs: object) -> Response:
+            etag = _etag(
+                self.paste,
+                self.extension or _guess_extension(self.paste["mime"]),
+                mode,
+            )
+            response = make_response(
+                Response(status=304)
+                if request.if_none_match.contains_weak(etag)
+                else renderer(*args, **kwargs)
+            )
+            response.set_etag(etag)
+            return response
+
+        return _render_unless_unmodified
 
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
         return self._renderer_for_mode(mode or _mode_for_mime(self.paste["mime"]))()
