@@ -204,7 +204,7 @@ class _RenderRequest:
 
 
 @blueprint.post("/")
-def create_paste() -> tuple[dict[str, str], int]:
+def create_paste() -> flask.typing.ResponseReturnValue:
     """Create a new paste."""
     # Calculate the expiration.
     now = request.date or datetime.now(timezone.utc)
@@ -245,6 +245,9 @@ def create_paste() -> tuple[dict[str, str], int]:
     except db.HashCollision as exc:
         hashid = str(exc)
         status = 409
+    except db.PasteExists as exc:
+        hashid = str(exc)
+        status = 200
     else:
         status = 201
 

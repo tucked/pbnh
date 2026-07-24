@@ -55,6 +55,10 @@ class PasteDBError(Exception):
     """There was a DB-related problem."""
 
 
+class PasteExists(PasteDBError):
+    """A paste was not created because it already exists."""
+
+
 class HashCollision(PasteDBError):
     """A paste could not be created because of a SHA1 collision."""
 
@@ -94,6 +98,7 @@ class _Paster:
             query = self.query(hashid=hashid) or {}
             if query["data"] != data:
                 raise HashCollision(hashid) from exc
+            raise PasteExists(hashid)
         return hashid
 
     def _query(self, *, hashid: str) -> _Paste | None:

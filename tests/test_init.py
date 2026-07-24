@@ -86,17 +86,12 @@ def test_config_malformed(tmp_path, text, monkeypatch, override_config, caplog):
     )
 
 
-def test_proxy_fix(app):
+@pytest.mark.parametrize("x_proto,scheme", [(0, "http"), (1, "https")])
+def test_proxy_fix(app, x_proto, scheme):
     """Setting x_proto in WERKZEUG_PROXY_FIX affects the returned link."""
-
-    def _proto_forwarded_link_scheme(app):
-        response = app.test_client().post(
-            "/", data={"content": "abc"}, headers={"X-Forwarded-Proto": "https"}
-        )
-        return urlsplit(json.loads(response.data.decode("utf-8"))["link"]).scheme
-
-    for x_proto, scheme in {0: "http", 1: "https"}.items():
-        app.config["WERKZEUG_PROXY_FIX"] = {"x_proto": x_proto}
-        assert (
-            _proto_forwarded_link_scheme(pbnh.create_app(app.config)) == scheme
-        ), x_proto
+    app.config["WERKZEUG_PROXY_FIX"] = {"x_proto": x_proto}
+    app = pbnh.create_app(app.config)
+    response = app.test_client().post(
+        "/", data={"content": "abc"}, headers={"X-Forwarded-Proto": "https"}
+    )
+    assert urlsplit(json.loads(response.data.decode("utf-8"))["link"]).scheme == scheme

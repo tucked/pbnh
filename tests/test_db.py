@@ -47,7 +47,9 @@ def test_create_new(paster):
 def test_create_dupe(paster):
     data = b"This is a test paste"
     with paster as p:
-        assert p.create(data) == p.create(data)
+        hashid = p.create(data)
+        with pytest.raises(pbnh.db.PasteExists, match=hashid):
+            p.create(data)
 
 
 def test_create_collision(paster):
