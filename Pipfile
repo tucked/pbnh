@@ -33,3 +33,6 @@ types-pyyaml = {version = ">=6.0"}
 
 [requires]
 python_version = "3.14"
+
+[scripts]
+pbnh = "gunicorn pbnh:create_app(check_db=True)"

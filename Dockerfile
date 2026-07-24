@@ -17,4 +17,4 @@ RUN pipenv install --deploy
 COPY . .
 COPY --from=frontend /frontend/dist/ pbnh/static/dist/
 EXPOSE 8000
-CMD ["pipenv", "run", "gunicorn", "pbnh:create_app(check_db=True)"]
+CMD ["pipenv", "run", "pbnh"]
