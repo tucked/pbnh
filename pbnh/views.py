@@ -1,15 +1,24 @@
 import functools
+import hashlib
 import json
 import mimetypes
 import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import flask.typing
 from docutils.core import publish_string
-from flask import Blueprint, Response, abort, redirect, render_template, request
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    make_response,
+    redirect,
+    render_template,
+    request,
+)
 
 from pbnh import db
 
@@ -25,6 +34,29 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
         return data.decode(encoding)
     except UnicodeDecodeError as exc:
         abort(422, f"The paste cannot be decoded as text ({exc}).")
+
+
+def _etag(paste: dict[str, Any], extension: str, mode: str) -> str:
+    # This is for caching, not security...
+    # If there is a collision, the worst that could happen is
+    # a 304 (Not Modified) may be inappropriately returned.
+    usedforsecurity = False
+    hashid = paste["hashid"]
+    if hashid == "about":
+        hashid = hashlib.sha1(
+            paste["data"],
+            usedforsecurity=usedforsecurity,
+        ).hexdigest()
+    etag = f"{hashid}.{extension}/{mode}"
+    if request.args:
+        etag += (
+            "?"
+            + hashlib.sha1(
+                json.dumps(request.args, sort_keys=True, default=str).encode(),
+                usedforsecurity=usedforsecurity,
+            ).hexdigest()
+        )
+    return etag
 
 
 def _get_paste(hashid: str) -> dict[str, Any]:
@@ -73,104 +105,102 @@ def _redirect(path: str, *args: Any, **kwargs: Any) -> flask.typing.ResponseRetu
     )
 
 
-def _render_asciicast(*, hashid: str, extension: str = "", **_: object) -> str:
-    if not extension:
-        extension = "cast"
-    # Prepare query params such that
-    # {{params|tojson}} produces a valid JS object:
-    params = {}
-    for key, value in request.args.items():
-        try:
-            params[key] = json.loads(value)
-        except json.JSONDecodeError:
-            params[key] = str(value)
-    params.setdefault("preload", True)
-    return render_template(
-        "asciinema.html.jinja", url=f"/{hashid}.{extension}", params=params
-    )
+class _RenderRequest:
+    def __init__(self, *, paste: dict[str, Any], extension: str = "") -> None:
+        self.paste = paste
+        self.extension = extension
 
-
-def _render_docutils(
-    *,
-    hashid: str,
-    extension: str = "",
-    paste: dict[str, Any] | None = None,
-    parser: str,
-    **_: object,
-) -> Response:
-    if not paste:
-        paste = _get_paste(hashid)
-    source_path = hashid
-    if extension:
-        source_path += f".{extension}"
-    return Response(
-        publish_string(
-            _decoded_data(paste["data"]),
-            source_path=source_path,
-            parser=parser,
-            writer="html5",
-            settings_overrides={"stylesheet_path": ["minimal.css"]},
+    def _render_asciicast(self) -> str:
+        extension = self.extension or "cast"
+        # Prepare query params such that
+        # {{params|tojson}} produces a valid JS object:
+        params = {}
+        for key, value in request.args.items():
+            try:
+                params[key] = json.loads(value)
+            except json.JSONDecodeError:
+                params[key] = str(value)
+        params.setdefault("preload", True)
+        return render_template(
+            "asciinema.html.jinja",
+            url=f"/{self.paste['hashid']}.{extension}",
+            params=params,
         )
-    )
 
+    def _render_docutils(self, *, parser: str) -> Response:
+        source_path = self.paste["hashid"]
+        if self.extension:
+            source_path += f".{self.extension}"
+        return make_response(
+            publish_string(
+                _decoded_data(self.paste["data"]),
+                source_path=source_path,
+                parser=parser,
+                writer="html5",
+                settings_overrides={"stylesheet_path": ["minimal.css"]},
+            )
+        )
 
-def _render_raw(
-    *,
-    hashid: str,
-    extension: str = "",
-    paste: dict[str, Any] | None = None,
-    **_: object,
-) -> Response:
-    if not paste:
-        paste = _get_paste(hashid)
-    return Response(
-        paste["data"],
-        mimetype=_guess_mime(request.url) if extension else paste["mime"],
-    )
+    def _render_raw(self) -> Response:
+        return Response(
+            self.paste["data"],
+            mimetype=_guess_mime(request.url) if self.extension else self.paste["mime"],
+        )
 
+    def _render_redirect(self) -> flask.typing.ResponseReturnValue:
+        if self.extension:
+            abort(400, "Extensions are not supported for redirects.")
+        return redirect(_decoded_data(self.paste["data"]), 302)
 
-def _render_redirect(
-    *,
-    hashid: str,
-    extension: str = "",
-    paste: dict[str, Any] | None = None,
-    **_: object,
-) -> flask.typing.ResponseReturnValue:
-    if extension:
-        abort(400, "Extensions are not supported for redirects.")
-    if not paste:
-        paste = _get_paste(hashid)
-    return redirect(_decoded_data(paste["data"]), 302)
+    def _render_text(self) -> str:
+        extension = self.extension or _guess_extension(self.paste["mime"])
+        return render_template(
+            "editor.html.jinja", url=f"/{self.paste['hashid']}.{extension}"
+        )
 
+    def _renderer_for_mode(
+        self,
+        mode: str,
+    ) -> Callable[..., flask.typing.ResponseReturnValue]:
+        try:
+            renderer = {
+                "cast": self._render_asciicast,
+                "md": functools.partial(self._render_docutils, parser="markdown"),
+                "raw": self._render_raw,
+                "redirect": self._render_redirect,
+                "rst": functools.partial(
+                    self._render_docutils, parser="restructuredtext"
+                ),
+                "text": self._render_text,
+                "txt": self._render_text,  # legacy
+            }[mode]
+        except KeyError as exc:
+            abort(400, f"{exc} is not a recognized rendering mode.")
 
-def _render_text(
-    *,
-    hashid: str,
-    extension: str = "",
-    paste: dict[str, Any] | None = None,
-    **_: object,
-) -> str:
-    if not extension:
-        extension = _guess_extension((paste or _get_paste(hashid))["mime"])
-    return render_template("editor.html.jinja", url=f"/{hashid}.{extension}")
+        # mypy can't keep up...
+        renderer = cast(Callable[..., flask.typing.ResponseReturnValue], renderer)
 
+        if mode == "redirect":
+            return renderer
 
-def _renderer_for_mode(
-    mode: str,
-) -> Callable[..., flask.typing.ResponseReturnValue]:
-    try:
-        # https://github.com/python/mypy/issues/12053
-        return {  # type: ignore
-            "cast": _render_asciicast,
-            "md": functools.partial(_render_docutils, parser="markdown"),
-            "raw": _render_raw,
-            "redirect": _render_redirect,
-            "rst": functools.partial(_render_docutils, parser="restructuredtext"),
-            "text": _render_text,
-            "txt": _render_text,  # legacy
-        }[mode]
-    except KeyError as exc:
-        abort(400, f"{exc} is not a recognized rendering mode.")
+        def _render_unless_unmodified(*args: object, **kwargs: object) -> Response:
+            etag = _etag(
+                self.paste,
+                self.extension or _guess_extension(self.paste["mime"]),
+                mode,
+            )
+            response = make_response(
+                Response(status=304)
+                if request.if_none_match.contains_weak(etag)
+                else renderer(*args, **kwargs)
+            )
+            response.set_etag(etag)
+            return response
+
+        return _render_unless_unmodified
+
+    def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
+        return self._renderer_for_mode(mode or _mode_for_mime(self.paste["mime"]))()
 
 
 @blueprint.post("/")
@@ -253,7 +283,7 @@ def retrieve_paste(
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
         return _redirect(f"/{hashid}/cast", 301)
-    return _render_raw(hashid=hashid, extension=extension, paste=paste)
+    return _RenderRequest(paste=paste, extension=extension).rendered("raw")
 
 
 @blueprint.get("/<string:hashid>")
@@ -263,12 +293,7 @@ def render_paste(
     hashid: str, extension: str = "", mode: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Render a paste."""
-    paste = None
-    if not mode:
-        paste = _get_paste(hashid)
-        mode = _mode_for_mime(paste["mime"])
-    renderer = _renderer_for_mode(mode)
-    return renderer(hashid=hashid, extension=extension, paste=paste)
+    return _RenderRequest(paste=_get_paste(hashid), extension=extension).rendered(mode)
 
 
 @blueprint.get("/<string:hashid>/")

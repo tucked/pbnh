@@ -73,8 +73,9 @@ class _Paster:
     ) -> str:
         hashid = hashlib.sha1(
             data,
-            # If a user has the hash, we will give them the data,
-            # so we do not care about the irreversibility of SHA1:
+            # This is for content identification, not security...
+            # If there is a collision, the new paste will be rejected,
+            # and the original paste will be preserved.
             usedforsecurity=False,
         ).hexdigest()
         paste = _Paste(

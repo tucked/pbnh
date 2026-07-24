@@ -356,3 +356,25 @@ def test_get_extension_unknown(content_key, test_client):
     response = test_client.get(f"/{hashid}.unknown")
     assert response.status_code == 200
     assert not response.content_type
+
+
+@pytest.mark.parametrize("extension", ["", "txt", "json", "unknown"])
+@pytest.mark.parametrize("mode", ["", "md", "raw", "rst", "text"])
+def test_get_etag(content_key, test_client, extension, mode):
+    response = test_client.post("/", data={content_key: "abc"})
+    hashid = response.json["hashid"]
+    path = f"/{hashid}"
+    if extension:
+        path += f".{extension}"
+    if mode:
+        path += f"/{mode}"
+    response = test_client.get(path)
+    assert response.status_code == 200
+    assert "ETag" in response.headers
+    etag = response.headers["ETag"]
+    response = test_client.get(path, headers={"If-None-Match": etag})
+    assert response.status_code == 304
+    response = test_client.get(path, headers={"If-None-Match": "W/" + etag})
+    assert response.status_code == 304
+    response = test_client.get(path, headers={"If-None-Match": "invalid"})
+    assert response.status_code == 200
