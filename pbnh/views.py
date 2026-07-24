@@ -43,7 +43,7 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
     try:
         return data.decode(encoding)
     except UnicodeDecodeError as exc:
-        abort(422, f"The paste cannot be decoded as text ({exc}).")
+        abort(422, f"The paste cannot be decoded as text: {exc}")
 
 
 def _get_paste(hashid: str) -> dict[str, Any]:
