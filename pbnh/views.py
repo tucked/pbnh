@@ -36,19 +36,24 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
         abort(422, f"The paste cannot be decoded as text ({exc}).")
 
 
-def _etag(hashid: str, extension: str, mode: str) -> str:
+def _etag(paste: dict[str, Any], extension: str, mode: str) -> str:
+    # This is for caching, not security...
+    # If there is a collision, the worst that could happen is
+    # a 304 (Not Modified) may be inappropriately returned.
+    usedforsecurity = False
+    hashid = paste["hashid"]
     if hashid == "about":
-        return ""
+        hashid = hashlib.sha1(
+            paste["data"],
+            usedforsecurity=usedforsecurity,
+        ).hexdigest()
     etag = f"{hashid}.{extension}/{mode}"
     if request.args:
         etag += (
             "?"
             + hashlib.sha1(
                 json.dumps(request.args, sort_keys=True, default=str).encode(),
-                # This is for caching, not security...
-                # If there is a collision, the worst that could happen is
-                # a 304 (Not Modified) may be inappropriately returned.
-                usedforsecurity=False,
+                usedforsecurity=usedforsecurity,
             ).hexdigest()
         )
     return etag
@@ -167,7 +172,7 @@ class _RenderRequest:
                 **kwargs: object,
             ) -> Response:
                 etag = _etag(
-                    self.paste["hashid"],
+                    self.paste,
                     self.extension or _guess_extension(self.paste["mime"]),
                     mode,
                 )
@@ -176,8 +181,7 @@ class _RenderRequest:
                     if request.if_none_match.contains_weak(etag)
                     else renderer(**kwargs)
                 )
-                if etag:
-                    response.set_etag(etag)
+                response.set_etag(etag)
                 return response
 
             return _render_unless_unmodified
