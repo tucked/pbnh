@@ -7,7 +7,23 @@ services:
       - POSTGRES_PASSWORD=postgres
   sut:
     build: .
-    pull_policy: build
     depends_on:
       - db
-    command: ./docker-compose.test.sh
+    environment:
+      - PORT=8000
+    secrets:
+      - source: pbnh.yaml
+        target: /etc/pbnh.yaml
+  tests:
+    build:
+      context: .
+      target: test
+    depends_on:
+      - sut
+    secrets:
+      - pbnh.yaml
+    environment:
+      - PBNH_CONFIG=/run/secrets/pbnh.yaml
+secrets:
+  pbnh.yaml:
+    file: ./tests/pbnh.yaml

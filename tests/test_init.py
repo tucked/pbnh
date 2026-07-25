@@ -12,7 +12,7 @@ def test_create_app_check_db(app):
     assert pbnh.create_app(app.config, check_db=True)
 
 
-def test_create_app_check_db_fails(override_config, monkeypatch):
+def test_create_app_check_db_fails(monkeypatch):
     """Passing check_db to create_app fails if the DB is not initialized."""
 
     class _TestDBCheckFailedError(Exception):
@@ -23,42 +23,41 @@ def test_create_app_check_db_fails(override_config, monkeypatch):
 
     monkeypatch.setattr(pbnh.time, "sleep", _fake_sleep)
     with pytest.raises(_TestDBCheckFailedError):
-        pbnh.create_app(override_config, check_db=True)
+        pbnh.create_app(check_db=True)
 
 
-def test_config_nondebug(override_config):
+def test_config_nondebug():
     """Setting DEBUG in config enables debug logging."""
-    override_config["DEBUG"] = True
-    pbnh.create_app(override_config).logger.level == logging.DEBUG
-    override_config["DEBUG"] = False
-    pbnh.create_app(override_config).logger.level != logging.DEBUG
+    pbnh.create_app({"DEBUG": True}).logger.level == logging.DEBUG
+    pbnh.create_app({"DEBUG": False}).logger.level != logging.DEBUG
 
 
-def test_config_path_env_var(tmp_path, monkeypatch, override_config):
+def test_config_path_env_var(tmp_path, monkeypatch):
     """Ensure that PBNH_CONFIG can be used to specify a config file."""
     path = tmp_path / "pbnh.yaml"
     key, value = "FOO", "BAR"
     path.write_text(f"{key}: {value}\n")
     monkeypatch.setenv(pbnh.CONFIG_PATH_ENV_VAR, str(path))
-    assert pbnh.create_app(override_config).config.get(key) == value
+    assert pbnh.create_app().config.get(key) == value
 
 
-def test_config_missing(monkeypatch, override_config, caplog):
+def test_config_missing(monkeypatch, caplog):
     """Ensure that a missing config file causes a warning to be logged."""
     path = "/does/not/exist"
     monkeypatch.setenv(pbnh.CONFIG_PATH_ENV_VAR, str(path))
-    pbnh.create_app(override_config)
+    pbnh.create_app()
     assert any(
         path in record.message and record.levelname == "WARNING"
         for record in caplog.records
     )
 
 
-def test_config_missing_default(monkeypatch, override_config, caplog):
+def test_config_missing_default(monkeypatch, caplog):
     """Ensure that a missing default config file causes a warning to be logged."""
     path = "/does/not/exist"
+    monkeypatch.delenv(pbnh.CONFIG_PATH_ENV_VAR, raising=False)
     monkeypatch.setattr(pbnh, "CONFIG_PATH_DEFAULT", path)
-    pbnh.create_app(override_config)
+    pbnh.create_app()
     assert any(
         path in record.message and record.levelname == "WARNING"
         for record in caplog.records
@@ -72,12 +71,12 @@ def test_config_missing_default(monkeypatch, override_config, caplog):
         ":",  # yaml.parser.ParserError
     ],
 )
-def test_config_malformed(tmp_path, text, monkeypatch, override_config, caplog):
+def test_config_malformed(tmp_path, text, monkeypatch, caplog):
     """Ensure that a malformed config file prevents app creation."""
     path = tmp_path / "pbnh.yaml"
     path.write_text(text)
     monkeypatch.setenv(pbnh.CONFIG_PATH_ENV_VAR, str(path))
-    assert pbnh.create_app(override_config) is None
+    assert pbnh.create_app() is None
     assert any(
         str(path) in record.message
         and "malformed" in record.message

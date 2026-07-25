@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 set -o errexit
 set -o xtrace
-pipenv install --deploy --dev
 pipenv audit
 pipenv run black --check pbnh tests
 pipenv run djlint --check --lint pbnh/templates
