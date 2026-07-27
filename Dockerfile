@@ -8,7 +8,8 @@ FROM python:3.14-slim
 # python-magic: https://github.com/ahupp/python-magic#debianubuntu
 RUN apt update && apt install --assume-yes \
     gcc python3-dev libpq-dev \
-    libmagic1
+    libmagic1 \
+    graphviz
 RUN pip install --upgrade pip
 RUN pip install --upgrade pipenv
 WORKDIR /pbnh

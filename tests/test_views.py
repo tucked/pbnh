@@ -409,3 +409,19 @@ def test_get_view_unknown_extension(content_key, test_client, extension):
     hashid = response.json["hashid"]
     response = test_client.get(f"/{hashid}.{extension}/view")
     assert response.status_code == 400
+
+
+@pytest.mark.parametrize("extension", ["dot", "gv"])
+def test_graphviz(content_key, test_client, extension):
+    response = test_client.post("/", data={content_key: "digraph G { A -> B; }"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.{extension}/view")
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize("extension", ["dot", "gv"])
+def test_graphviz_invalid(content_key, test_client, extension):
+    response = test_client.post("/", data={content_key: "not graphviz"})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}.{extension}/view")
+    assert response.status_code == 422

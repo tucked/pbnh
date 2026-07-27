@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import flask.typing
+import pygraphviz  # type: ignore
 from docutils.core import publish_string
 from flask import (
     Blueprint,
@@ -31,6 +32,7 @@ REDIRECT_MIME = "text/x.pbnh.redirect"
 VIEW_MIMES = {
     "asciicast": {"application/asciicast+json", "application/x-asciicast"},
     "docutils": set(DOCUTILS_MIMES),
+    "graphviz": {"text/vnd.graphviz", "text/x-graphviz"},
 }
 
 # https://github.com/asciinema/asciinema/issues/224
@@ -41,7 +43,7 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
     try:
         return data.decode(encoding)
     except UnicodeDecodeError as exc:
-        abort(422, f"The paste cannot be decoded as text ({exc}).")
+        abort(422, f"The paste cannot be decoded as text: {exc}")
 
 
 def _get_paste(hashid: str) -> dict[str, Any]:
@@ -118,6 +120,17 @@ class _PasteView:
             )
         )
 
+    def _render_graphviz(self) -> flask.typing.ResponseReturnValue:
+        try:
+            return Response(
+                pygraphviz.AGraph(string=_decoded_data(self.paste["data"])).draw(
+                    prog="dot", format="svg"
+                ),
+                mimetype="image/svg+xml",
+            )
+        except Exception as exc:
+            abort(422, f"Graphviz rendering failed: {exc}")
+
     def _render_raw(self) -> flask.typing.ResponseReturnValue:
         return Response(self.paste["data"], mimetype=self.mime())
 
@@ -141,6 +154,8 @@ class _PasteView:
             return self._render_docutils(parser=parser)
         if mime in VIEW_MIMES["asciicast"]:
             return self._render_asciicast()
+        if mime in VIEW_MIMES["graphviz"]:
+            return self._render_graphviz()
         abort(400, f"There is no renderer associated with the {mime} media type.")
 
     def etag(self, mode: str) -> str:

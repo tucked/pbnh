@@ -95,5 +95,6 @@ Currently, the following rendering modes are supported:
 - `/text` : Text Mode
 - `/view` : View Mode
   - [Asciicasts](https://asciinema.org/) (`application/x-asciicast`)
+  - [Graphviz](https://graphviz.org/) (`text/vnd.graphviz`)
   - [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`)
   - [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`)
