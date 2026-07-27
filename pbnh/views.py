@@ -103,7 +103,7 @@ class _PasteView:
         params.setdefault("preload", True)
         return render_template(
             "asciinema.html.jinja",
-            url=f"/{self.paste['hashid']}.{self.extension()}",
+            url=self.raw_path(),
             params=params,
         )
 
@@ -111,7 +111,7 @@ class _PasteView:
         return make_response(
             publish_string(
                 _decoded_data(self.paste["data"]),
-                source_path=self.paste["hashid"] + "." + self.extension(),
+                source_path=self.raw_path(),
                 parser=parser,
                 writer="html5",
                 settings_overrides={"stylesheet_path": ["minimal.css"]},
@@ -127,9 +127,7 @@ class _PasteView:
         return redirect(_decoded_data(self.paste["data"]), 302)
 
     def _render_text(self) -> flask.typing.ResponseReturnValue:
-        return render_template(
-            "editor.html.jinja", url=f"/{self.paste['hashid']}.{self.extension()}"
-        )
+        return render_template("editor.html.jinja", url=self.raw_path())
 
     def _render_view(self) -> flask.typing.ResponseReturnValue:
         mime = self.paste["mime"]
@@ -179,6 +177,9 @@ class _PasteView:
 
     def mode(self) -> str:
         return _mode_for_mime(self.mime())
+
+    def raw_path(self) -> str:
+        return f"/{self.paste['hashid']}.{self.extension()}"
 
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
         if not mode:
