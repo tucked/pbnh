@@ -205,12 +205,22 @@ def test_text_mode_guess_type(content_key, test_client):
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("mode", ["md", "rst"])
+@pytest.mark.parametrize("mode", ["cast", "md", "rst"])
 def test_legacy_view_redirect(content_key, test_client, mode):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
     hashid = j.get("hashid")
     response = test_client.get(f"/{hashid}/{mode}")
+    assert response.status_code == 301
+    assert response.location.endswith(f"/{hashid}.{mode}/view")
+
+
+@pytest.mark.parametrize("mode", ["cast", "md", "rst"])
+def test_legacy_view_redirect_raw_unknown(content_key, test_client, mode):
+    response = test_client.post("/", data={content_key: "abc", "mime": "non/sense"})
+    j = json.loads(response.data.decode("utf-8"))
+    hashid = j.get("hashid")
+    response = test_client.get(f"/{hashid}./{mode}")
     assert response.status_code == 301
     assert response.location.endswith(f"/{hashid}.{mode}/view")
 
