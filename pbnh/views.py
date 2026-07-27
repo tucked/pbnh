@@ -184,6 +184,12 @@ class _PasteView:
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
         if not mode:
             mode = self.mode()
+
+        if mode in {"cast", "md", "rst"}:  # legacy
+            return _redirect(f"/{self.paste['hashid']}.{mode}/view", 301)
+        if mode == "txt":  # legacy
+            return _redirect(request.path.replace("/txt", "/text"), 301)
+
         try:
             renderer = {
                 "raw": self._render_raw,
@@ -295,10 +301,6 @@ def render_paste(
     hashid: str, extension: str = "", mode: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Render a paste."""
-    if mode in {"cast", "md", "rst"}:  # legacy
-        return _redirect(f"/{hashid}.{mode}/view", 301)
-    if mode == "txt":  # legacy
-        return _redirect(request.path.replace("/txt", "/text"), 301)
     return _PasteView(paste=_get_paste(hashid), extension=extension).rendered(mode)
 
 
