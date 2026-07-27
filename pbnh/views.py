@@ -2,7 +2,6 @@ import hashlib
 import json
 import mimetypes
 import urllib.parse
-from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -174,39 +173,6 @@ class _PasteView:
             return self._render_asciicast()
         abort(400, f"There is no renderer associated with the {mime} media type.")
 
-    def _renderer_for_mode(
-        self,
-        mode: str,
-    ) -> Callable[..., flask.typing.ResponseReturnValue]:
-        try:
-            renderer = {
-                "raw": self._render_raw,
-                "redirect": self._render_redirect,
-                "text": self._render_text,
-                "view": self._render_view,
-            }[mode]
-        except KeyError as exc:
-            abort(400, f"{exc} is not a recognized rendering mode.")
-
-        if mode == "redirect":
-            return renderer
-
-        def _render_unless_unmodified(*args: object, **kwargs: object) -> Response:
-            etag = _etag(
-                self.paste,
-                self.extension or _guess_extension(self.paste["mime"]),
-                mode,
-            )
-            response = make_response(
-                Response(status=304)
-                if request.if_none_match.contains_weak(etag)
-                else renderer(*args, **kwargs)
-            )
-            response.set_etag(etag)
-            return response
-
-        return _render_unless_unmodified
-
     def mime(self) -> str:
         return (
             _guess_mime(f"{self.paste['hashid']}.{self.extension}")
@@ -218,7 +184,33 @@ class _PasteView:
         return _mode_for_mime(self.mime())
 
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
-        return self._renderer_for_mode(mode or self.mode())()
+        if not mode:
+            mode = self.mode()
+        try:
+            renderer = {
+                "raw": self._render_raw,
+                "redirect": self._render_redirect,
+                "text": self._render_text,
+                "view": self._render_view,
+            }[mode]
+        except KeyError as exc:
+            abort(400, f"{exc} is not a recognized rendering mode.")
+
+        if mode == "redirect":
+            return renderer()
+
+        etag = _etag(
+            self.paste,
+            self.extension or _guess_extension(self.paste["mime"]),
+            mode,
+        )
+        response = make_response(
+            Response(status=304)
+            if request.if_none_match.contains_weak(etag)
+            else renderer()
+        )
+        response.set_etag(etag)
+        return response
 
 
 @blueprint.post("/")
