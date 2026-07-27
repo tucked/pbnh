@@ -110,7 +110,7 @@ def _redirect(path: str, *args: Any, **kwargs: Any) -> flask.typing.ResponseRetu
     )
 
 
-class _RenderRequest:
+class _PasteView:
     def __init__(self, *, paste: dict[str, Any], extension: str = "") -> None:
         self.paste = paste
         self.extension = extension
@@ -297,7 +297,7 @@ def retrieve_paste(
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
         return _redirect(f"/{hashid}.cast/view", 301)
-    return _RenderRequest(paste=paste, extension=extension).rendered("raw")
+    return _PasteView(paste=paste, extension=extension).rendered("raw")
 
 
 @blueprint.get("/<string:hashid>")
@@ -311,7 +311,7 @@ def render_paste(
         return _redirect(f"/{hashid}.{mode}/view", 301)
     if mode == "txt":  # legacy
         return _redirect(request.path.replace("/txt", "/text"), 301)
-    return _RenderRequest(paste=_get_paste(hashid), extension=extension).rendered(mode)
+    return _PasteView(paste=_get_paste(hashid), extension=extension).rendered(mode)
 
 
 @blueprint.get("/<string:hashid>/")
