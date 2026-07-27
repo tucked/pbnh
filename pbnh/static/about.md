@@ -71,11 +71,19 @@ curl --form content="Burn this after 10 seconds!" --form sunset=10 pbnh.example.
 
 ## Raw Retrieval
 
+```
+GET /<hashid>.[<extension>]
+```
+
 If a file extension is appended to the paste ID in the requested URI (i.e. `GET /<hashid>.<extension>`),
 the paste will be returned unmodified with the `Content-Type` header set to the type associated with the extension.
 Append a `.` with no extension (i.e. `GET /<hashid>.`) to use the type associated with the paste.
 
 ## Web Rendering
+
+```
+GET /<hashid>[[.[<extension>]]/[<mode>]]
+```
 
 If only the paste ID is requested (i.e. `GET /<hashid>` or `GET /<hashid>/`),
 the paste will be rendered for a Web browser according to the paste's associated MIME type.
@@ -83,10 +91,9 @@ A rendering mode can be explicitly selected by appending `/<mode>` to the URI.
 
 Currently, the following rendering modes are supported:
 
-- [Asciicasts](https://asciinema.org/) (`application/x-asciicast`): `GET /<hashid>/cast`
-
-- [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`): `GET /<hashid>/md`
-
-- [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`): `GET /<hashid>/rst`
-
-Additionally, syntax highlighting is supported for many other text types: `GET /<hashid>/text`
+- `/raw ` : [Raw Retrieval](#raw-retrieval)
+- `/text` : Text Mode
+- `/view` : View Mode
+  - [Asciicasts](https://asciinema.org/) (`application/x-asciicast`)
+  - [Markdown](https://en.wikipedia.org/wiki/Markdown) (`text/markdown`)
+  - [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText) (`text/x-rst`)

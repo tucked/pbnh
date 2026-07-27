@@ -1,4 +1,3 @@
-import functools
 import hashlib
 import json
 import mimetypes
@@ -6,7 +5,7 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import flask.typing
 from docutils.core import publish_string
@@ -23,7 +22,17 @@ from flask import (
 from pbnh import db
 
 blueprint = Blueprint("views", __name__)
+
+DOCUTILS_MIMES = {  # parsers
+    "text/markdown": "markdown",
+    "text/prs.fallenstein.rst": "restructuredtext",
+    "text/x-rst": "restructuredtext",
+}
 REDIRECT_MIME = "text/x.pbnh.redirect"
+VIEW_MIMES = {
+    "asciicast": {"application/asciicast+json", "application/x-asciicast"},
+    "docutils": set(DOCUTILS_MIMES),
+}
 
 # https://github.com/asciinema/asciinema/issues/224
 mimetypes.add_type("application/x-asciicast", ".cast", strict=False)
@@ -86,14 +95,10 @@ def _guess_mime(url: str) -> str:
 def _mode_for_mime(mime: str) -> str:
     if mime in {REDIRECT_MIME, "redirect"}:
         return "redirect"
+    if any(mime in mimes for mimes in VIEW_MIMES.values()):
+        return "view"
     if mime.startswith("text/"):
-        if mime == "text/markdown":
-            return "md"
-        if mime in {"text/x-rst", "text/prs.fallenstein.rst"}:
-            return "rst"
         return "text"
-    if mime in {"application/asciicast+json", "application/x-asciicast"}:
-        return "cast"
     return "raw"
 
 
@@ -110,7 +115,7 @@ class _RenderRequest:
         self.paste = paste
         self.extension = extension
 
-    def _render_asciicast(self) -> str:
+    def _render_asciicast(self) -> flask.typing.ResponseReturnValue:
         extension = self.extension or "cast"
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
@@ -127,7 +132,7 @@ class _RenderRequest:
             params=params,
         )
 
-    def _render_docutils(self, *, parser: str) -> Response:
+    def _render_docutils(self, *, parser: str) -> flask.typing.ResponseReturnValue:
         source_path = self.paste["hashid"]
         if self.extension:
             source_path += f".{self.extension}"
@@ -141,7 +146,7 @@ class _RenderRequest:
             )
         )
 
-    def _render_raw(self) -> Response:
+    def _render_raw(self) -> flask.typing.ResponseReturnValue:
         return Response(
             self.paste["data"],
             mimetype=_guess_mime(request.url) if self.extension else self.paste["mime"],
@@ -152,11 +157,25 @@ class _RenderRequest:
             abort(400, "Extensions are not supported for redirects.")
         return redirect(_decoded_data(self.paste["data"]), 302)
 
-    def _render_text(self) -> str:
+    def _render_text(self) -> flask.typing.ResponseReturnValue:
         extension = self.extension or _guess_extension(self.paste["mime"])
         return render_template(
             "editor.html.jinja", url=f"/{self.paste['hashid']}.{extension}"
         )
+
+    def _render_view(self) -> flask.typing.ResponseReturnValue:
+        mime = self.paste["mime"]
+        if self.extension:
+            mime = _guess_mime(f"/{self.paste['hashid']}.{self.extension}") or abort(
+                400,
+                "There is no renderer associated with"
+                f" the .{self.extension} extension.",
+            )
+        if parser := DOCUTILS_MIMES.get(mime):
+            return self._render_docutils(parser=parser)
+        if mime in VIEW_MIMES["asciicast"]:
+            return self._render_asciicast()
+        abort(400, f"There is no renderer associated with the {mime} media type.")
 
     def _renderer_for_mode(
         self,
@@ -164,21 +183,13 @@ class _RenderRequest:
     ) -> Callable[..., flask.typing.ResponseReturnValue]:
         try:
             renderer = {
-                "cast": self._render_asciicast,
-                "md": functools.partial(self._render_docutils, parser="markdown"),
                 "raw": self._render_raw,
                 "redirect": self._render_redirect,
-                "rst": functools.partial(
-                    self._render_docutils, parser="restructuredtext"
-                ),
                 "text": self._render_text,
-                "txt": self._render_text,  # legacy
+                "view": self._render_view,
             }[mode]
         except KeyError as exc:
             abort(400, f"{exc} is not a recognized rendering mode.")
-
-        # mypy can't keep up...
-        renderer = cast(Callable[..., flask.typing.ResponseReturnValue], renderer)
 
         if mode == "redirect":
             return renderer
@@ -285,7 +296,7 @@ def retrieve_paste(
         # .asciinema is a legacy pbnh thing...
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
-        return _redirect(f"/{hashid}/cast", 301)
+        return _redirect(f"/{hashid}.cast/view", 301)
     return _RenderRequest(paste=paste, extension=extension).rendered("raw")
 
 
@@ -296,6 +307,10 @@ def render_paste(
     hashid: str, extension: str = "", mode: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Render a paste."""
+    if mode in {"cast", "md", "rst"}:  # legacy
+        return _redirect(f"/{hashid}.{mode}/view", 301)
+    if mode == "txt":  # legacy
+        return _redirect(request.path.replace("/txt", "/text"), 301)
     return _RenderRequest(paste=_get_paste(hashid), extension=extension).rendered(mode)
 
 
