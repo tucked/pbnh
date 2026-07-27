@@ -290,21 +290,16 @@ def retrieve_paste(
     paste = _get_paste(hashid)
     if not extension:
         extension = _guess_extension(paste["mime"])
-        suffix = ""
         if extension:
-            suffix += f".{extension}"
-        if mode:
-            suffix += f"/{mode}"
-        elif request.path.endswith("/"):
-            suffix += "/"
-        if suffix:
-            return _redirect(f"/{hashid}{suffix}", 301)
+            return _redirect(
+                request.path.replace(f"/{hashid}.", f"/{hashid}.{extension}"), 301
+            )
     elif extension == "asciinema":
         # .asciinema is a legacy pbnh thing...
         # asciinema used to use .json (application/asciicast+json),
         # and now it uses .cast (application/x-asciicast).
         return _redirect(f"/{hashid}.cast/view", 301)
-    return _PasteView(paste=paste, extension=extension).rendered("raw")
+    return _PasteView(paste=paste, extension=extension).rendered(mode or "raw")
 
 
 @blueprint.get("/<string:hashid>")
