@@ -5,7 +5,7 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import flask.typing
 from docutils.core import publish_string
@@ -115,7 +115,7 @@ class _RenderRequest:
         self.paste = paste
         self.extension = extension
 
-    def _render_asciicast(self) -> str:
+    def _render_asciicast(self) -> flask.typing.ResponseReturnValue:
         extension = self.extension or "cast"
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
@@ -132,7 +132,7 @@ class _RenderRequest:
             params=params,
         )
 
-    def _render_docutils(self, *, parser: str) -> Response:
+    def _render_docutils(self, *, parser: str) -> flask.typing.ResponseReturnValue:
         source_path = self.paste["hashid"]
         if self.extension:
             source_path += f".{self.extension}"
@@ -146,7 +146,7 @@ class _RenderRequest:
             )
         )
 
-    def _render_raw(self) -> Response:
+    def _render_raw(self) -> flask.typing.ResponseReturnValue:
         return Response(
             self.paste["data"],
             mimetype=_guess_mime(request.url) if self.extension else self.paste["mime"],
@@ -157,7 +157,7 @@ class _RenderRequest:
             abort(400, "Extensions are not supported for redirects.")
         return redirect(_decoded_data(self.paste["data"]), 302)
 
-    def _render_text(self) -> str:
+    def _render_text(self) -> flask.typing.ResponseReturnValue:
         extension = self.extension or _guess_extension(self.paste["mime"])
         return render_template(
             "editor.html.jinja", url=f"/{self.paste['hashid']}.{extension}"
@@ -190,9 +190,6 @@ class _RenderRequest:
             }[mode]
         except KeyError as exc:
             abort(400, f"{exc} is not a recognized rendering mode.")
-
-        # mypy can't keep up...
-        renderer = cast(Callable[..., flask.typing.ResponseReturnValue], renderer)
 
         if mode == "redirect":
             return renderer
