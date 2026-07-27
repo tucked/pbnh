@@ -210,8 +210,15 @@ class _PasteView:
 
         return _render_unless_unmodified
 
+    def mode(self) -> str:
+        return _mode_for_mime(
+            _guess_mime(f"{self.paste['hashid']}.{self.extension}")
+            if self.extension
+            else self.paste["mime"]
+        )
+
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
-        return self._renderer_for_mode(mode or _mode_for_mime(self.paste["mime"]))()
+        return self._renderer_for_mode(mode or self.mode())()
 
 
 @blueprint.post("/")
@@ -320,7 +327,5 @@ def redirect_to_mode(
     hashid: str, extension: str = ""
 ) -> flask.typing.ResponseReturnValue:
     """Redirect to a URL with an explicit mode."""
-    paste = _get_paste(hashid)
-    mime = _guess_mime(request.url) if extension else paste["mime"]
-    mode = _mode_for_mime(mime)
+    mode = _PasteView(paste=_get_paste(hashid), extension=extension).mode()
     return _redirect(request.path + mode, 302)
