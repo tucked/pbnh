@@ -89,10 +89,9 @@ def _redirect(path: str, *args: Any, **kwargs: Any) -> flask.typing.ResponseRetu
 class _PasteView:
     def __init__(self, *, paste: dict[str, Any], extension: str = "") -> None:
         self.paste = paste
-        self.extension = extension
+        self._extension = extension
 
     def _render_asciicast(self) -> flask.typing.ResponseReturnValue:
-        extension = self.extension or "cast"
         # Prepare query params such that
         # {{params|tojson}} produces a valid JS object:
         params = {}
@@ -104,18 +103,15 @@ class _PasteView:
         params.setdefault("preload", True)
         return render_template(
             "asciinema.html.jinja",
-            url=f"/{self.paste['hashid']}.{extension}",
+            url=f"/{self.paste['hashid']}.{self.extension()}",
             params=params,
         )
 
     def _render_docutils(self, *, parser: str) -> flask.typing.ResponseReturnValue:
-        source_path = self.paste["hashid"]
-        if self.extension:
-            source_path += f".{self.extension}"
         return make_response(
             publish_string(
                 _decoded_data(self.paste["data"]),
-                source_path=source_path,
+                source_path=self.paste["hashid"] + "." + self.extension(),
                 parser=parser,
                 writer="html5",
                 settings_overrides={"stylesheet_path": ["minimal.css"]},
@@ -126,23 +122,22 @@ class _PasteView:
         return Response(self.paste["data"], mimetype=self.mime())
 
     def _render_redirect(self) -> flask.typing.ResponseReturnValue:
-        if self.extension:
+        if self._extension:
             abort(400, "Extensions are not supported for redirects.")
         return redirect(_decoded_data(self.paste["data"]), 302)
 
     def _render_text(self) -> flask.typing.ResponseReturnValue:
-        extension = self.extension or _guess_extension(self.paste["mime"])
         return render_template(
-            "editor.html.jinja", url=f"/{self.paste['hashid']}.{extension}"
+            "editor.html.jinja", url=f"/{self.paste['hashid']}.{self.extension()}"
         )
 
     def _render_view(self) -> flask.typing.ResponseReturnValue:
         mime = self.paste["mime"]
-        if self.extension:
-            mime = _guess_mime(f"/{self.paste['hashid']}.{self.extension}") or abort(
+        if self._extension:
+            mime = _guess_mime(f"/{self.paste['hashid']}.{self._extension}") or abort(
                 400,
                 "There is no renderer associated with"
-                f" the .{self.extension} extension.",
+                f" the .{self._extension} extension.",
             )
         if parser := DOCUTILS_MIMES.get(mime):
             return self._render_docutils(parser=parser)
@@ -161,7 +156,7 @@ class _PasteView:
                 self.paste["data"],
                 usedforsecurity=usedforsecurity,
             ).hexdigest()
-        etag = f"{hashid}.{self.extension}/{mode or self.mode()}"
+        etag = f"{hashid}.{self.extension()}/{mode or self.mode()}"
         if request.args:
             etag += (
                 "?"
@@ -172,10 +167,13 @@ class _PasteView:
             )
         return etag
 
+    def extension(self) -> str:
+        return self._extension or _guess_extension(self.mime())
+
     def mime(self) -> str:
         return (
-            _guess_mime(f"{self.paste['hashid']}.{self.extension}")
-            if self.extension
+            _guess_mime(f"{self.paste['hashid']}.{self._extension}")
+            if self._extension
             else self.paste["mime"]
         )
 
