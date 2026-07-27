@@ -147,10 +147,7 @@ class _PasteView:
         )
 
     def _render_raw(self) -> flask.typing.ResponseReturnValue:
-        return Response(
-            self.paste["data"],
-            mimetype=_guess_mime(request.url) if self.extension else self.paste["mime"],
-        )
+        return Response(self.paste["data"], mimetype=self.mime())
 
     def _render_redirect(self) -> flask.typing.ResponseReturnValue:
         if self.extension:
@@ -210,12 +207,15 @@ class _PasteView:
 
         return _render_unless_unmodified
 
-    def mode(self) -> str:
-        return _mode_for_mime(
+    def mime(self) -> str:
+        return (
             _guess_mime(f"{self.paste['hashid']}.{self.extension}")
             if self.extension
             else self.paste["mime"]
         )
+
+    def mode(self) -> str:
+        return _mode_for_mime(self.mime())
 
     def rendered(self, mode: str) -> flask.typing.ResponseReturnValue:
         return self._renderer_for_mode(mode or self.mode())()
