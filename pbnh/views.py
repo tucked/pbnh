@@ -44,29 +44,6 @@ def _decoded_data(data: bytes, *, encoding: str = "utf-8") -> str:
         abort(422, f"The paste cannot be decoded as text ({exc}).")
 
 
-def _etag(paste: dict[str, Any], extension: str, mode: str) -> str:
-    # This is for caching, not security...
-    # If there is a collision, the worst that could happen is
-    # a 304 (Not Modified) may be inappropriately returned.
-    usedforsecurity = False
-    hashid = paste["hashid"]
-    if hashid == "about":
-        hashid = hashlib.sha1(
-            paste["data"],
-            usedforsecurity=usedforsecurity,
-        ).hexdigest()
-    etag = f"{hashid}.{extension}/{mode}"
-    if request.args:
-        etag += (
-            "?"
-            + hashlib.sha1(
-                json.dumps(request.args, sort_keys=True, default=str).encode(),
-                usedforsecurity=usedforsecurity,
-            ).hexdigest()
-        )
-    return etag
-
-
 def _get_paste(hashid: str) -> dict[str, Any]:
     if hashid == "about":
         about_path = Path(__file__).parent / "static" / "about.md"
@@ -173,6 +150,28 @@ class _PasteView:
             return self._render_asciicast()
         abort(400, f"There is no renderer associated with the {mime} media type.")
 
+    def etag(self, mode: str) -> str:
+        # This is for caching, not security...
+        # If there is a collision, the worst that could happen is
+        # a 304 (Not Modified) may be inappropriately returned.
+        usedforsecurity = False
+        hashid = self.paste["hashid"]
+        if hashid == "about":
+            hashid = hashlib.sha1(
+                self.paste["data"],
+                usedforsecurity=usedforsecurity,
+            ).hexdigest()
+        etag = f"{hashid}.{self.extension}/{mode or self.mode()}"
+        if request.args:
+            etag += (
+                "?"
+                + hashlib.sha1(
+                    json.dumps(request.args, sort_keys=True, default=str).encode(),
+                    usedforsecurity=usedforsecurity,
+                ).hexdigest()
+            )
+        return etag
+
     def mime(self) -> str:
         return (
             _guess_mime(f"{self.paste['hashid']}.{self.extension}")
@@ -199,11 +198,7 @@ class _PasteView:
         if mode == "redirect":
             return renderer()
 
-        etag = _etag(
-            self.paste,
-            self.extension or _guess_extension(self.paste["mime"]),
-            mode,
-        )
+        etag = self.etag(mode)
         response = make_response(
             Response(status=304)
             if request.if_none_match.contains_weak(etag)
