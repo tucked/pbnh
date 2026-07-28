@@ -29,6 +29,30 @@ DOCUTILS_MIMES = {  # parsers
     "text/x-rst": "restructuredtext",
 }
 REDIRECT_MIME = "text/x.pbnh.redirect"
+TEXT_MIMES = {  # non-text types that PbnhEditor can highlight
+    "application/ecmascript",
+    "application/javascript",
+    "application/json",
+    "application/json-seq",
+    "application/jsonl",
+    "application/mbox",
+    "application/pgp-keys",
+    "application/pgp-signature",
+    "application/sql",
+    "application/toml",
+    "application/x-json",
+    "application/x-latex",
+    "application/x-ndjson",
+    "application/x-perl",
+    "application/x-ruby",
+    "application/x-sh",
+    "application/x-shellscript",
+    "application/x-tex",
+    "application/x-yaml",
+    "application/xml",
+    "application/xml-dtd",
+    "application/yaml",
+}
 VIEW_MIMES = {
     "asciicast": {"application/asciicast+json", "application/x-asciicast"},
     "docutils": set(DOCUTILS_MIMES),
@@ -75,7 +99,7 @@ def _mode_for_mime(mime: str) -> str:
         return "redirect"
     if any(mime in mimes for mimes in VIEW_MIMES.values()):
         return "view"
-    if mime.startswith("text/"):
+    if mime.startswith("text/") or mime in TEXT_MIMES:
         return "text"
     return "raw"
 
