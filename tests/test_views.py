@@ -162,6 +162,15 @@ def test_restructuredtext(content_key, test_client, mode, suffix):
     assert response.status_code == 200
 
 
+@pytest.mark.parametrize("mime", ["application/json", "application/xml"])
+def test_text_mode_for_nontext_mime(content_key, test_client, mime):
+    response = test_client.post("/", data={content_key: "{}", "mime": mime})
+    hashid = response.json["hashid"]
+    response = test_client.get(f"/{hashid}/")
+    assert response.status_code == 302
+    assert response.location.endswith(f"/{hashid}/text")
+
+
 def test_bad_mode(content_key, test_client):
     response = test_client.post("/", data={content_key: "abc"})
     j = json.loads(response.data.decode("utf-8"))
