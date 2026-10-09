@@ -103,8 +103,7 @@ class _Paster:
 
     def _query(self, *, hashid: str) -> _Paste | None:
         # Beware: This autobegins a transaction!
-        filter_ = _Paste.hashid == hashid
-        return self._session.query(_Paste).filter(filter_).first()
+        return self._session.query(_Paste).filter(_Paste.hashid == hashid).first()
 
     def query(self, *, hashid: str) -> dict[str, object] | None:
         with self._session.begin():
