@@ -135,6 +135,8 @@ class _PasteView:
 
     def _render_docutils(self, *, parser: str) -> flask.typing.ResponseReturnValue:
         settings_overrides = {
+            "file_insertion_enabled": False,
+            "raw_enabled": False,
             "stylesheet_path": ["minimal.css"],
         }
         if "report_level" in request.args:
