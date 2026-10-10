@@ -134,13 +134,21 @@ class _PasteView:
         )
 
     def _render_docutils(self, *, parser: str) -> flask.typing.ResponseReturnValue:
+        settings_overrides = {
+            "stylesheet_path": ["minimal.css"],
+        }
+        if "report_level" in request.args:
+            try:
+                settings_overrides["report_level"] = int(request.args["report_level"])
+            except ValueError:
+                abort(400, "report_level must be an integer.")
         return make_response(
             publish_string(
                 _decoded_data(self.paste["data"]),
                 source_path=self.raw_path(),
                 parser=parser,
                 writer="html5",
-                settings_overrides={"stylesheet_path": ["minimal.css"]},
+                settings_overrides=settings_overrides,
             )
         )
 
