@@ -14,12 +14,12 @@ pygments = {version = ">=2.20"}
 pygraphviz = {version = ">=2.0"}
 python-magic = {version = ">=0.4"}
 pyyaml = {version = ">=6.0"}
-sqlalchemy = {version = ">=2.0"}
+sqlalchemy = {version = ">=2.1.6"}
 werkzeug = {version = ">=2.2"}
 
 [dev-packages]
 bandit = {version = ">=1.7"}
-black = {version = ">=22.10"}
+black = {version = ">=26.10.1"}
 djlint = {version = ">=1.42"}
 flake8 = {version = ">=6.0"}
 flake8-pyproject = {version = ">=1.2"}
