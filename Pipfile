@@ -35,7 +35,7 @@ types-pyyaml = {version = ">=6.0"}
 webdriver-manager = {version = ">=4.1"}
 
 [requires]
-python_version = "3.14"
+python_version = "3.15"
 
 [scripts]
 pbnh = "gunicorn pbnh:create_app(check_db=True)"
